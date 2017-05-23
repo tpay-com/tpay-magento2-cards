@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!--
+/**
+ *
+ * @category    payment gateway
+ * @package     Tpaycom_Magento2.1
+ * @author      tpay.com
+ * @copyright   (https://tpay.com)
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <payment>
+            <tpaycom_magento2cards>
+                <active>0</active>
+                <model>tpaycom\magento2cards\Model\TpayCards</model>
+                <payment_action>authorize_capture</payment_action>
+                <title>tpay.com - płatności online kartą</title>
+                <allowspecific>0</allowspecific>
+                <min_order_total>0.10</min_order_total>
+            </tpaycom_magento2cards>
+        </payment>
+    </default>
+</config>

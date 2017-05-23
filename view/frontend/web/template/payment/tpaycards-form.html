@@ -1,0 +1,123 @@
+<div class="payment-method" data-bind="css: {'_active': (getCode() == isChecked())}">
+    <div class="payment-method-title field choice">
+        <input type="radio"
+               name="payment[method]"
+               class="radio"
+               data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible()"/>
+        <label data-bind="attr: {'for': getCode()}" class="label">
+            <img data-bind="attr: {src: getLogoUrl(), alt: $t('tpay.com')}" class="payment-icon"/>
+            <span data-bind="text: getTitle()"></span>
+        </label>
+    </div>
+    <div class="payment-method-content">
+        <div class="insidebg">
+
+            <p id="tpayRSA" style="display: none" data-bind="html: getRSAkey()"></p>
+            <div id="powered_by"></div>
+            <div id="card_payment" style="visibility: visible">
+                <label for="card_number">Card number</label>
+                <input id="card_number" pattern="\d*" autocompletetype="cc-number" size="30" type="tel"
+                       autocomplete="off"
+                       maxlength="23" placeholder="0000 0000 0000 0000" tabindex="1" value=""/>
+
+                <div id="expiry_date_wrapper">
+                    <label for="expiry_date">Expiration date</label>
+                    <input id="expiry_date" maxlength="9" type="tel" placeholder="00 / 00" autocomplete="off"
+                           autocompletetype="cc-exp" tabindex="2" value=""/>
+                </div>
+                <div id="cvc_wrapper">
+                    <label for="cvc">CVC <span
+                            title="Dla MasterCard, Visa lub Discover, są to przy ostatnie
+             cyfry umieszczone przy podpisie karty.">?</span></label>
+                    <input id="cvc" maxlength="3" type="tel" autocomplete="off" autocompletetype="cc-cvc"
+                           placeholder="000"
+                           tabindex="4" value=""/>
+                </div>
+
+                <label for="c_name">Name</label>
+
+                <input type="tel" id="c_name" placeholder="Name" autocomplete="off"
+                       name="client_name"
+                       maxlength="64" tabindex="5" value=""/>
+
+                <label for="c_email">E-mail</label>
+
+                <input type="tel" id="c_email" data-formance_algorithm="complex" autocomplete="off"
+                       placeholder="email@example.com"
+                       name="client_email" value="" maxlength="64" tabindex="6">
+                <input type="hidden" name="card_data" id="card_data"/>
+            </div>
+
+            <div id="card_icons">
+                <div class="card_icon" id="visa"></div>
+                <div class="card_icon" id="master"></div>
+                <div class="card_icon" id="maestro"></div>
+                <div class="card_icon" id="diners"></div>
+                <div class="card_icon" id="jcb"></div>
+            </div>
+
+            <p id="info_msg"></p>
+
+
+            <div id="loading_scr" style="display:none"><img
+                    data-bind="
+                        attr: {src: getTpayLoadingGif()}"
+                    style="vertical-align: middle;"/>&nbsp;&nbsp;Processing data,
+                please
+                wait...
+            </div>
+
+        </div>
+
+        <span data-bind="html: fetchJavaScripts()"></span>
+
+        <span data-bind="html: addCSS()"></span>
+        <!-- ko foreach: getRegion('messages') -->
+        <!-- ko template: getTemplate() --><!-- /ko -->
+        <!--/ko-->
+        <div class="payment-method-billing-address">
+            <!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
+            <!-- ko template: getTemplate() --><!-- /ko -->
+            <!--/ko-->
+        </div>
+        <div class="checkout-agreements-block">
+            <!-- ko foreach: $parent.getRegion('before-place-order') -->
+            <!-- ko template: getTemplate() --><!-- /ko -->
+            <!--/ko-->
+        </div>
+
+
+        <div class="actions-toolbar">
+            <div class="primary">
+                <button class="action primary checkout"
+                        id="tpaycom_magento2cards_check"
+                        type="button"
+                        data-bind="
+                        attr: {title: $t('Check card data')},
+                        css: {disabled: !isPlaceOrderActionAllowed()},
+                        enable: (getCode() == isChecked()),
+                        "
+                        disabled>
+                    <span data-bind="text: $t('Check card data')"></span>
+                </button>
+            </div>
+        </div>
+        <div class="actions-toolbar">
+            <div class="primary">
+                <button class="action primary checkout"
+                        id="tpaycom_magento2cards_submit"
+                        type="submit"
+                        style="display: none"
+                        data-bind="
+                        click: placeOrder,
+                        attr: {title: $t('Place Order')},
+                        css: {disabled: !isPlaceOrderActionAllowed()},
+                        enable: (getCode() == isChecked()),
+                        "
+                        disabled>
+                    <span data-bind="text: $t('Place Order')"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

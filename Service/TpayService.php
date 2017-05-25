@@ -60,9 +60,12 @@ class TpayService
             Order::STATE_PENDING_PAYMENT,
             __('Waiting for tpay.com payment.')
         );
-        $order->setTotalDue($order->getGrandTotal())->setTotalPaid(0.00);
-        $order->setSendEmail($sendEmail);
-        $order->save();
+        $order->setTotalDue($order->getGrandTotal())
+            ->setTotalPaid(0.00)
+            ->setBaseTotalPaid(0.00)
+            ->setBaseTotalDue($order->getBaseGrandTotal());
+
+        $order->setSendEmail($sendEmail)->save();
 
         return $order;
     }
@@ -137,7 +140,10 @@ class TpayService
             }
             $status = __('The payment from tpay.com has been accepted.') . '</br>' . $transactionDesc;
             $state = Order::STATE_PROCESSING;
-            $order->setTotalDue(0.00)->setTotalPaid($orderAmount);
+            $order->setTotalDue(0.00)
+                ->setTotalPaid($orderAmount)
+                ->setBaseTotalPaid($order->getBaseGrandTotal())
+                ->setBaseTotalDue(0.00);
         } else {
             if ($order->getState() != Order::STATE_HOLDED) {
                 $emailNotify = true;

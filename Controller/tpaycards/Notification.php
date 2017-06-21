@@ -96,7 +96,7 @@ class Notification extends Action
             $orderId = $validParams['order_id'];
             $localData = $this->tpay->getTpayFormData($orderId);
             $paymentCards->validateSign($validParams['sign'], isset($validParams['test_mode']) ? '1' : '',
-                $validParams['sale_auth'], $validParams['order_id'], $validParams['card'], (float)$localData['kwota'],
+                $validParams['sale_auth'], $validParams['order_id'], $validParams['card'], (double)$localData['kwota'],
                 $validParams['date'], $localData['currency']);
 
             $this->tpayService->setOrderStatus($orderId, $validParams);

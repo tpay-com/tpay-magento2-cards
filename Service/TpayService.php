@@ -128,12 +128,12 @@ class TpayService
             $payment->save();
             $transaction->save();
         }
-        $orderAmount = (double)number_format($order->getGrandTotal(), 2);
+        $orderAmount = (double)number_format($order->getGrandTotal(), 2, '.', '');
         $trStatus = $validParams[ResponseFields::STATUS];
         $emailNotify = false;
 
         if ($trStatus === 'correct' && ((double)number_format($validParams[ResponseFields::AMOUNT],
-                    2) === $orderAmount)
+                    2, '.', '') === $orderAmount)
         ) {
             if ($order->getState() != Order::STATE_PROCESSING) {
                 $emailNotify = true;

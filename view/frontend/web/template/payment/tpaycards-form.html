@@ -15,34 +15,34 @@
             <p id="tpayRSA" style="display: none" data-bind="html: getRSAkey()"></p>
             <div id="powered_by"></div>
             <div id="card_payment" style="visibility: visible">
-                <label for="card_number">Card number</label>
+                <label for="card_number" data-bind="i18n: 'Card number'"></label>
                 <input id="card_number" pattern="\d*" autocompletetype="cc-number" size="30" type="tel"
                        autocomplete="off"
                        maxlength="23" placeholder="0000 0000 0000 0000" tabindex="1" value=""/>
 
                 <div id="expiry_date_wrapper">
-                    <label for="expiry_date">Expiration date</label>
+                    <label for="expiry_date" data-bind="i18n: 'Expiration date'"></label>
                     <input id="expiry_date" maxlength="9" type="tel" placeholder="00 / 00" autocomplete="off"
                            autocompletetype="cc-exp" tabindex="2" value=""/>
                 </div>
                 <div id="cvc_wrapper">
-                    <label for="cvc">CVC <span
-                            title="For MasterCard, Visa or Discover, these are the last three digits placed next to the card's user signature.">?</span></label>
+                    <label for="cvc"><!-- ko i18n: 'CVC' --><!-- /ko --> <span
+                            data-bind="attr: { title: $t('For MasterCard, Visa or Discover, these are the last three digits placed next to the card's user signature.') }">?</span></label>
                     <input id="cvc" maxlength="3" type="tel" autocomplete="off" autocompletetype="cc-cvc"
                            placeholder="000"
                            tabindex="4" value=""/>
                 </div>
 
-                <label for="c_name">Name</label>
+                <label for="c_name" data-bind="i18n: 'Name'"></label>
 
-                <input type="tel" id="c_name" placeholder="Name" autocomplete="off"
+                <input type="tel" id="c_name" data-bind="attr: { placeholder: $t('Name') }" autocomplete="off"
                        name="client_name"
                        maxlength="64" tabindex="5" value=""/>
 
-                <label for="c_email">E-mail</label>
+                <label for="c_email" data-bind="i18n: 'E-mail'"></label>
 
                 <input type="tel" id="c_email" data-formance_algorithm="complex" autocomplete="off"
-                       placeholder="email@example.com"
+                       data-bind="attr: { placeholder: $t('email@example.com') }"
                        name="client_email" value="" maxlength="64" tabindex="6">
                 <input type="hidden" name="card_data" id="card_data"/>
             </div>
@@ -61,9 +61,9 @@
             <div id="loading_scr" style="display:none"><img
                     data-bind="
                         attr: {src: getTpayLoadingGif()}"
-                    style="vertical-align: middle;"/>&nbsp;&nbsp;Processing data,
-                please
-                wait...
+                    style="vertical-align: middle;"/>&nbsp;&nbsp;<!-- ko i18n: 'Processing data' --><!-- /ko -->,
+                <!-- ko i18n: 'please' --><!-- /ko -->
+                <!-- ko i18n: 'wait...' --><!-- /ko -->
             </div>
 
         </div>

@@ -173,7 +173,7 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
         $order = $this->getOrder($orderId);
 
         $billingAddress = $order->getBillingAddress();
-        $amount = number_format($order->getGrandTotal(), 2);
+        $amount = number_format($order->getGrandTotal(), 2, '.', '');
         $name = $billingAddress->getData('firstname') . ' ' . $billingAddress->getData('lastname');
 
         $om = \Magento\Framework\App\ObjectManager::getInstance();

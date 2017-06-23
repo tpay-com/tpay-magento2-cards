@@ -1,4 +1,4 @@
-jQuery(function ($) {
+require(['jquery', 'mage/translate'], function ($, $t) {
 
     !function () {
         var e, t, n, r, i, s, o, u, a, f, l, c, h, p, d, v, m, g, y, b, w, E, S, x, T, N, C, k, L, A, O, M, _, D, P, H, B, j, F, I, q, R, U, z, W, X, V, $, J, K, Q, G, Y, Z, et, tt, nt, rt, it, st, ot, ut, at, ft, lt = [].slice, ct = [].indexOf || function (e) {
@@ -1625,7 +1625,7 @@ jQuery(function ($) {
             if ($("#card_data").val !== '') {
                 $("#tpaycom_magento2cards_check").fadeOut();
                 $("#tpaycom_magento2cards_submit").fadeIn();
-                $("#loading_scr").html('Card data correct! You can now place order.');
+                $("#loading_scr").html( $t('Card data correct! You can now place order.') );
                 $("#card_payment").fadeOut();
                 $("#loading_scr").fadeIn();
             }
@@ -1741,7 +1741,7 @@ jQuery(function ($) {
                 SubmitPayment();
             } else {
                 $("#loading_scr").fadeIn();
-                $("#loading_scr").html('Incorrect card data!');
+                $("#loading_scr").html( $t('Incorrect card data!') );
             }
         });
     }

@@ -14,10 +14,17 @@
             <tpaycom_magento2cards>
                 <active>0</active>
                 <model>tpaycom\magento2cards\Model\TpayCards</model>
-                <payment_action>authorize_capture</payment_action>
+                <payment_action>sale</payment_action>
                 <title>tpay.com - płatności online kartą</title>
                 <allowspecific>0</allowspecific>
                 <min_order_total>0.10</min_order_total>
+                <is_gateway>1</is_gateway>
+                <can_use_checkout>1</can_use_checkout>
+                <can_authorize>0</can_authorize>
+                <can_capture>0</can_capture>
+                <can_refund>0</can_refund>
+                <can_void>0</can_void>
+                <can_cancel>1</can_cancel>
             </tpaycom_magento2cards>
         </payment>
     </default>

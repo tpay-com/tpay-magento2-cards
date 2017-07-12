@@ -24,12 +24,15 @@ define(
                 return 'tpaycom_magento2cards';
             },
             afterPlaceOrder: function () {
+                $("#card_number").val('');
+                $("#cvc").val('');
+                $("#expiry_date").val('');
+                $("#loading_scr").fadeIn();
                 window.location.replace(window.checkoutConfig.tpaycards.payment.redirectUrl);
             },
             fetchJavaScripts: function () {
                 return window.checkoutConfig.tpaycards.payment.fetchJavaScripts;
             },
-
             getRSAkey: function () {
                 return window.checkoutConfig.tpaycards.payment.getRSAkey;
             },
@@ -46,19 +49,13 @@ define(
                 var parent = this._super(),
                     paymentData = {};
                 paymentData['card_data'] = $('input[name="card_data"]').val();
-                paymentData['c_name'] = $('input[name="client_name"]').val();
-                paymentData['c_email'] = $('input[name="client_email"]').val();
+
                 return $.extend(true, parent, {'additional_data': paymentData});
             },
 
             isActive: function () {
                 return true;
             }
-            ,
 
-
-        })
-            ;
-    }
-)
-;
+        });
+    });

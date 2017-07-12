@@ -1598,38 +1598,12 @@ require(['jquery', 'mage/translate'], function ($, $t) {
                 return false
             }
             return true
-        }
+        };
     }.call(this);
 
+    $("#tpaycom_magento2cards_submit").addClass('disabled');
 
-    function CardPayment(url, pubkey) {
-
-
-        this.url = url;
-        this.pubkey = pubkey;
-
-        //  $("#card_payment_form").attr("action", url);
-
-        function SubmitPayment() {
-
-            var cd = $('#card_number').val() + '|' + $('#expiry_date').val() + '|' + $('#cvc').val() + '|' + document.location.origin;
-            var encrypt = new JSEncrypt();
-            var decoded = Base64.decode(pubkey);
-            encrypt.setPublicKey(decoded);
-            var encrypted = encrypt.encrypt(cd);
-
-            $("#card_data").val(encrypted);
-            $("#card_number").val('');
-            $("#cvc").val('');
-            $("#expiry_date").val('');
-            if ($("#card_data").val !== '') {
-                $("#tpaycom_magento2cards_check").fadeOut();
-                $("#tpaycom_magento2cards_submit").fadeIn();
-                $("#loading_scr").html( $t('Card data correct! You can now place order.') );
-                $("#card_payment").fadeOut();
-                $("#loading_scr").fadeIn();
-            }
-        }
+    function CardPayment() {
 
         var DINERS = /^(30|36|38)/,
             ELECTRON = /^(4026|417500|4508|4844|4913|4917)/,
@@ -1643,9 +1617,11 @@ require(['jquery', 'mage/translate'], function ($, $t) {
             $('div.card_icon').removeClass('hover');
             if (!$(this).formance('validate_credit_card_number')) {
                 $(this).addClass('wrong');
+                setWrong(this);
                 goon = false;
             } else {
-                $(this).removeClass('wrong');
+                $(this).removeClass('wrong').removeAttr('style');
+                enablePayment();
                 $("#loading_scr").fadeOut();
                 goon = true;
                 var type = '';
@@ -1669,9 +1645,11 @@ require(['jquery', 'mage/translate'], function ($, $t) {
         $('input#cvc').formance('format_credit_card_cvc').on('keyup change blur', function (event) {
             if (!$(this).formance('validate_credit_card_cvc')) {
                 $(this).addClass('wrong');
+                setWrong(this);
                 goon = false;
             } else {
-                $(this).removeClass('wrong');
+                $(this).removeClass('wrong').removeAttr('style');
+                enablePayment();
                 $("#loading_scr").fadeOut();
             }
         });
@@ -1706,48 +1684,48 @@ require(['jquery', 'mage/translate'], function ($, $t) {
         $('input#expiry_date').formance('format_credit_card_expiry').on('keyup change blur', function (event) {
             if (!$(this).formance('validate_credit_card_expiry')) {
                 $(this).addClass('wrong');
+                setWrong(this);
                 goon = false;
             } else {
-                $(this).removeClass('wrong');
-                $("#loading_scr").fadeOut();
-            }
-        });
-        $('input#c_name').on('keyup change blur', function (event) {
-            if ($(this).val().length < 3) {
-                $(this).addClass('wrong');
-                goon = false;
-            } else {
-                $(this).removeClass('wrong');
-                $("#loading_scr").fadeOut();
-            }
-        });
-        $('input#c_email').on('keyup change blur', function (event) {
-            if (!$(this).formance('validate_email')) {
-                $(this).addClass('wrong');
-                goon = false;
-            } else {
-                $(this).removeClass('wrong');
+                $(this).removeClass('wrong').removeAttr('style');
+                enablePayment();
                 $("#loading_scr").fadeOut();
             }
         });
 
-        $('#tpaycom_magento2cards_check').click(function () {
-            $('input').each(function () {
-                $(this).trigger('keyup');
-            });
-            if (document.getElementById("cc_month"))
-                $('select#cc_month,select#cc_year').trigger('keyup');
-            if (goon) {
-                SubmitPayment();
-            } else {
-                $("#loading_scr").fadeIn();
-                $("#loading_scr").html( $t('Incorrect card data!') );
-            }
-        });
     }
 
     $(document).ready(function () {
-        var RSA = document.getElementById("tpayRSA").textContent;
-        new CardPayment("", RSA);
+        new CardPayment();
     });
+
+    function setWrong(elem) {
+        $(elem).css({'border': '2px solid #ff9696', 'box-shadow': '0 1px 3px #dcdcdc', 'background': '#ffeeee'});
+        $("#tpaycom_magento2cards_submit").addClass('disabled');
+    }
+
+    function enablePayment() {
+        var x = true, cn = $('#card_number').val(), ed = $('#expiry_date').val(), cvc = $('#cvc').val();
+        $('input').each(function () {
+            if ($(this).hasClass('wrong')) {
+                x = false;
+            }
+        });
+        if (cn.length === 0 || ed.length === 0 || cvc.length === 0) {
+            x = false;
+        }
+        if (x) {
+            var RSA = document.getElementById("tpayRSA").textContent;
+            var cd = cn + '|' + ed + '|' + cvc + '|' + document.location.origin;
+            var encrypt = new JSEncrypt();
+            var decoded = Base64.decode(RSA);
+            encrypt.setPublicKey(decoded);
+            var encrypted = encrypt.encrypt(cd);
+            $("#card_data").val(encrypted);
+            $("#tpaycom_magento2cards_submit").removeClass('disabled');
+        }
+    }
+
 });
+
+

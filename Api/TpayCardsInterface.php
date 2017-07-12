@@ -25,14 +25,7 @@ interface TpayCardsInterface
      * @var string
      */
     const CARDDATA = 'card_data';
-    /**
-     * @var string
-     */
-    const CNAME = 'c_name';
-    /**
-     * @var string
-     */
-    const CEMAIL = 'c_email';
+
 
     /**
      * Return data for form

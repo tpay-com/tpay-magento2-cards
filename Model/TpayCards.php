@@ -277,14 +277,6 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
             static::CARDDATA,
             isset($additionalData[static::CARDDATA]) ? $additionalData[static::CARDDATA] : ''
         );
-        $info->setAdditionalInformation(
-            static::CNAME,
-            isset($additionalData[static::CNAME]) ? $additionalData[static::CNAME] : ''
-        );
-        $info->setAdditionalInformation(
-            static::CEMAIL,
-            isset($additionalData[static::CEMAIL]) ? $additionalData[static::CEMAIL] : ''
-        );
 
         return $this;
     }

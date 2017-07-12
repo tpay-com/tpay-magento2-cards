@@ -26,24 +26,16 @@
                            autocompletetype="cc-exp" tabindex="2" value=""/>
                 </div>
                 <div id="cvc_wrapper">
-                    <label for="cvc"><!-- ko i18n: 'CVC' --><!-- /ko --> <span
-                            data-bind="attr: { title: $t('For MasterCard, Visa or Discover, these are the last three digits placed next to the card's user signature.') }">?</span></label>
+                    <label for="cvc"><!-- ko i18n: 'CVC' --><!-- /ko --><span
+                            data-bind="
+                        attr: {title: $t('For MasterCard, Visa or Discover, these are the last three digits placed next to the card user signature.')},
+                        "
+                            >?</span></label>
                     <input id="cvc" maxlength="3" type="tel" autocomplete="off" autocompletetype="cc-cvc"
                            placeholder="000"
                            tabindex="4" value=""/>
                 </div>
 
-                <label for="c_name" data-bind="i18n: 'Name'"></label>
-
-                <input type="text" id="c_name" data-bind="attr: { placeholder: $t('Name') }" autocomplete="off"
-                       name="client_name"
-                       maxlength="64" tabindex="5" value=""/>
-
-                <label for="c_email" data-bind="i18n: 'E-mail'"></label>
-
-                <input type="email" id="c_email" data-formance_algorithm="complex" autocomplete="off"
-                       data-bind="attr: { placeholder: $t('email@example.com') }"
-                       name="client_email" value="" maxlength="64" tabindex="6">
                 <input type="hidden" name="card_data" id="card_data"/>
             </div>
 
@@ -61,9 +53,7 @@
             <div id="loading_scr" style="display:none"><img
                     data-bind="
                         attr: {src: getTpayLoadingGif()}"
-                    style="vertical-align: middle;"/>&nbsp;&nbsp;<!-- ko i18n: 'Processing data' --><!-- /ko -->,
-                <!-- ko i18n: 'please' --><!-- /ko -->
-                <!-- ko i18n: 'wait...' --><!-- /ko -->
+                    style="vertical-align: middle;"/>&nbsp;&nbsp;<!-- ko i18n: 'Processing data, please wait...' --><!-- /ko -->
             </div>
 
         </div>
@@ -85,28 +75,11 @@
             <!--/ko-->
         </div>
 
-
-        <div class="actions-toolbar">
-            <div class="primary">
-                <button class="action primary checkout"
-                        id="tpaycom_magento2cards_check"
-                        type="button"
-                        data-bind="
-                        attr: {title: $t('Check card data')},
-                        css: {disabled: !isPlaceOrderActionAllowed()},
-                        enable: (getCode() == isChecked()),
-                        "
-                        disabled>
-                    <span data-bind="text: $t('Check card data')"></span>
-                </button>
-            </div>
-        </div>
         <div class="actions-toolbar">
             <div class="primary">
                 <button class="action primary checkout"
                         id="tpaycom_magento2cards_submit"
                         type="submit"
-                        style="display: none"
                         data-bind="
                         click: placeOrder,
                         attr: {title: $t('Place Order')},

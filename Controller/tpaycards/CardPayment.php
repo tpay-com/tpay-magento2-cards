@@ -141,14 +141,10 @@ class CardPayment extends Action
     {
         $data = $this->tpay->getTpayFormData($orderId);
         $cardData = str_replace(' ', '+', $additionalPaymentInformation['card_data']);
-        $name = strlen($additionalPaymentInformation['c_name']) > 0 ?
-            $additionalPaymentInformation['c_name'] : $data['nazwisko'];
-        $email = filter_var($additionalPaymentInformation['c_email'], FILTER_VALIDATE_EMAIL) ?
-            $additionalPaymentInformation['c_email'] : $data['email'];
         unset($additionalPaymentInformation['card_data']);
         $data = array_merge($data, $additionalPaymentInformation);
 
-        return $this->apiFactory->secureSale($name, $email, $data['opis'], $data['kwota'], $cardData, $data['currency'],
+        return $this->apiFactory->secureSale($data['nazwisko'], $data['email'], $data['opis'], $data['kwota'], $cardData, $data['currency'],
             $data['crc'], true, $data['jezyk'], true, $data['pow_url'], $data['pow_url_blad']
         );
     }

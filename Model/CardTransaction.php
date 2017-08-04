@@ -61,9 +61,8 @@ class CardTransaction
     public function createCardTransaction($transactionData)
     {
         $url = "{$this->urlApi}/{$this->apiKey}";
-
-        libxml_disable_entity_loader(true);
         $transactionData['json'] = 1;
+
         return (array)json_decode(Curl::doCurlRequest($url, $transactionData));
 
     }

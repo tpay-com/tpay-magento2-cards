@@ -12,6 +12,7 @@ namespace tpaycom\magento2cards\Controller\tpaycards;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\DataObject;
 use tpaycom\magento2cards\Api\TpayCardsInterface;
 use tpaycom\magento2cards\lib\CardAPI;
 use tpaycom\magento2cards\lib\PaymentCardFactory;
@@ -21,6 +22,7 @@ use tpaycom\magento2cards\Model\CardsTransactionFactory;
 use tpaycom\magento2cards\Model\CardTransaction;
 use tpaycom\magento2cards\Service\TpayService;
 use Zend\Http\Header\Location;
+use Magento\Sales\Model\Order;
 
 /**
  * Class CardPayment
@@ -41,6 +43,8 @@ class CardPayment extends Action
     const SALE = 'sale';
     const SALEAUTH = 'sale_auth';
     const CLIAUTH = 'cli_auth';
+    const ERROR_PATH = 'magento2cards/tpaycards/error';
+
     /**
      * @var TpayService
      */
@@ -91,42 +95,32 @@ class CardPayment extends Action
 
         if ($orderId) {
             $paymentData = $this->tpayService->getPaymentData($orderId);
-
-            $this->tpayService->setOrderStatePendingPayment($orderId, true);
-
-            $apiPass = $this->tpay->getApiPassword();
-            $apiKey = $this->tpay->getApiKey();
-            $verificationCode = $this->tpay->getVerificationCode();
-            $hashAlg = $this->tpay->getHashType();
-            $RSAKey = $this->tpay->getRSAKey();
-            $this->apiFactory = new CardAPI($apiKey, $apiPass, $verificationCode, $hashAlg);
-
+            $this->tpayService->setOrderStatePendingPayment($orderId);
             $additionalPaymentInformation = $paymentData['additional_information'];
-
+            $paymentCardFactory = $this->createTpayCardFactory();
             $result = $this->makeCardPayment($orderId, $additionalPaymentInformation);
             $this->checkoutSession->unsQuoteId();
+
             if (isset($result[ResponseFields::URL3DS])) {
                 $url3ds = $result[ResponseFields::URL3DS];
-                $this->_redirect($url3ds);
+                return $this->_redirect($url3ds);
 
             } else {
-                $paymentCardFactory = $this->paymentCardFactory->create([
-                    'apiKey'  => $apiKey,
-                    'apiPass' => $apiPass,
-                    'code'    => $verificationCode,
-                    'hashAlg' => $hashAlg,
-                    'keyRSA'  => $RSAKey
-                ]);
-                $localData = $this->tpay->getTpayFormData($orderId);
-                $paymentCardFactory->validateNon3dsSign($result['sign'], isset($result['test_mode']) ? '1' : '',
-                    $result['sale_auth'], '', $result['card'], $localData['kwota'],
-                    $result['date'], $localData['currency']);
-                $this->tpayService->setOrderStatus($orderId, $result);
-                return ((int)$result['result'] === 1 && $result[ResponseFields::STATUS] === 'correct') ?
-                    $this->_redirect('magento2cards/tpaycards/success') : $this->_redirect('magento2cards/tpaycards/error');
-            }
 
+                $localData = $this->tpay->getTpayFormData($orderId);
+
+                if (isset($result[ResponseFields::STATUS]) && (int)$result[ResponseFields::STATUS] === 'correct') {
+                    $paymentCardFactory->validateNon3dsSign($result['sign'], isset($result['test_mode']) ? '1' : '',
+                        $result['sale_auth'], '', $result['card'], $localData['kwota'], $result['date'],
+                        $localData['currency']);
+                }
+                $this->tpayService->setOrderStatus($orderId, $result);
+
+                return ((int)$result[ResponseFields::RESULT] === 1 && $result[ResponseFields::STATUS] === 'correct') ?
+                    $this->_redirect('magento2cards/tpaycards/success') : $this->_redirect(static::ERROR_PATH);
+            }
         }
+        return $this->_redirect(static::ERROR_PATH);
     }
 
     /**
@@ -144,8 +138,27 @@ class CardPayment extends Action
         unset($additionalPaymentInformation['card_data']);
         $data = array_merge($data, $additionalPaymentInformation);
 
-        return $this->apiFactory->secureSale($data['nazwisko'], $data['email'], $data['opis'], $data['kwota'], $cardData, $data['currency'],
+        return $this->apiFactory->secureSale($data['nazwisko'], $data['email'], $data['opis'], $data['kwota'],
+            $cardData, $data['currency'],
             $data['crc'], true, $data['jezyk'], true, $data['pow_url'], $data['pow_url_blad']
         );
+    }
+
+    private function createTpayCardFactory()
+    {
+        $apiPass = $this->tpay->getApiPassword();
+        $apiKey = $this->tpay->getApiKey();
+        $verificationCode = $this->tpay->getVerificationCode();
+        $hashAlg = $this->tpay->getHashType();
+        $RSAKey = $this->tpay->getRSAKey();
+        $this->apiFactory = new CardAPI($apiKey, $apiPass, $verificationCode, $hashAlg);
+
+        return $this->paymentCardFactory->create([
+            'apiKey'  => $apiKey,
+            'apiPass' => $apiPass,
+            'code'    => $verificationCode,
+            'hashAlg' => $hashAlg,
+            'keyRSA'  => $RSAKey
+        ]);
     }
 }

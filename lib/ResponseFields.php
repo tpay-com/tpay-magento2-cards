@@ -29,4 +29,5 @@ class ResponseFields
     const DATE = 'date';
     const REASON = 'reason';
     const URL3DS = '3ds_url';
+    const RESULT = 'result';
 }

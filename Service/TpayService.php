@@ -9,6 +9,7 @@
 
 namespace tpaycom\magento2cards\Service;
 
+use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface;
 use Magento\Sales\Model\Order;
@@ -47,25 +48,21 @@ class TpayService
      * Change order state and notify user if needed
      *
      * @param int $orderId
-     * @param bool $sendEmail
-     *
      * @return Order
      */
-    public function setOrderStatePendingPayment($orderId, $sendEmail)
+    public function setOrderStatePendingPayment($orderId)
     {
         /** @var Order $order */
         $order = $this->orderRepository->getByIncrementId($orderId);
 
-        $order->addStatusToHistory(
-            Order::STATE_PENDING_PAYMENT,
-            __('Waiting for tpay.com payment.')
-        );
         $order->setTotalDue($order->getGrandTotal())
             ->setTotalPaid(0.00)
             ->setBaseTotalPaid(0.00)
-            ->setBaseTotalDue($order->getBaseGrandTotal());
+            ->setBaseTotalDue($order->getBaseGrandTotal())
+            ->setState(\Magento\Sales\Model\Order::STATE_PENDING_PAYMENT)
+            ->addStatusToHistory(true);
 
-        $order->setSendEmail($sendEmail)->save();
+        $order->save();
 
         return $order;
     }
@@ -97,12 +94,80 @@ class TpayService
     {
         /** @var Order $order */
         $order = $this->orderRepository->getByIncrementId($orderId);
-
         if (!$order->getId()) {
             return false;
         }
-        $payment = $order->getPayment();
         $transactionDesc = $this->getTransactionDesc($validParams);
+        $orderAmount = (double)number_format($order->getGrandTotal(), 2, '.', '');
+        $emailNotify = false;
+
+        if (!isset($validParams[ResponseFields::STATUS]) || (int)$validParams[ResponseFields::RESULT] !== 1
+            || $validParams[ResponseFields::STATUS] !== 'correct'
+            || ((double)number_format($validParams[ResponseFields::AMOUNT], 2, '.', '') !== $orderAmount)
+        ) {
+            if ($order->getState() != Order::STATE_HOLDED) {
+                $emailNotify = true;
+            }
+            $status = __('Payment has been declined: ') . '</br>' . $transactionDesc;
+            $state = Order::STATE_HOLDED;
+        } else {
+            if ($order->getState() != Order::STATE_PROCESSING) {
+                $emailNotify = true;
+            }
+            $status = __('The payment from tpay.com has been accepted.') . '</br>' . $transactionDesc;
+            $state = Order::STATE_PROCESSING;
+            $order->setTotalDue(0.00)
+                ->setTotalPaid($orderAmount)
+                ->setBaseTotalPaid($order->getBaseGrandTotal())
+                ->setBaseTotalDue(0.00);
+            $this->setTransaction($order, $validParams, $transactionDesc);
+        }
+
+        $order->setState($state);
+        $order->addStatusToHistory($state, $status, true);
+
+        if ($emailNotify) {
+            $order->setSendEmail(true);
+        }
+        $order->save();
+        return $order;
+    }
+
+    /**
+     * Get description for transaction
+     *
+     * @param array $validParams
+     *
+     * @return bool|string
+     */
+    protected function getTransactionDesc($validParams)
+    {
+        if (empty($validParams)) {
+            return false;
+        }
+        if (isset ($validParams['err_desc'])) {
+            return 'Payment error: ' . $validParams['err_desc'] . ', error code: ' . $validParams['err_code'];
+        }
+        $error = null;
+        if ($validParams['status'] === 'declined') {
+            $error = $validParams['reason'];
+        }
+
+        $transactionDesc = (is_null($error)) ? ' ' : ' Reason:  <b>' . $error . '</b>';
+        $transactionDesc .= (isset($validParams[ResponseFields::TEST_MODE])) &&
+        (int)$validParams[ResponseFields::TEST_MODE] === 1 ? '<b> TEST </b>' : ' ';
+        return $transactionDesc;
+    }
+
+    /**
+     * @param OrderInterface $order
+     * @param array $validParams
+     * @param string $transactionDesc
+     */
+    private function setTransaction($order, $validParams, $transactionDesc)
+    {
+        $payment = $order->getPayment();
+
         if ($payment) {
             $payment->setLastTransId($validParams[ResponseFields::SALE_AUTH]);
             $payment->setTransactionId($validParams[ResponseFields::SALE_AUTH]);
@@ -128,59 +193,5 @@ class TpayService
             $payment->save();
             $transaction->save();
         }
-        $orderAmount = (double)number_format($order->getGrandTotal(), 2, '.', '');
-        $trStatus = $validParams[ResponseFields::STATUS];
-        $emailNotify = false;
-
-        if ($trStatus === 'correct' && ((double)number_format($validParams[ResponseFields::AMOUNT],
-                    2, '.', '') === $orderAmount)
-        ) {
-            if ($order->getState() != Order::STATE_PROCESSING) {
-                $emailNotify = true;
-            }
-            $status = __('The payment from tpay.com has been accepted.') . '</br>' . $transactionDesc;
-            $state = Order::STATE_PROCESSING;
-            $order->setTotalDue(0.00)
-                ->setTotalPaid($orderAmount)
-                ->setBaseTotalPaid($order->getBaseGrandTotal())
-                ->setBaseTotalDue(0.00);
-        } else {
-            if ($order->getState() != Order::STATE_HOLDED) {
-                $emailNotify = true;
-            }
-            $status = __('Payment has been declined: ') . '</br>' . $transactionDesc;
-            $state = Order::STATE_HOLDED;
-        }
-        $order->setState($state);
-        $order->addStatusToHistory($state, $status, true);
-
-        if ($emailNotify) {
-            $order->setSendEmail(true);
-        }
-        $order->save();
-        return $order;
-    }
-
-    /**
-     * Get description for transaction
-     *
-     * @param array $validParams
-     *
-     * @return bool|string
-     */
-    protected function getTransactionDesc($validParams)
-    {
-        if (empty($validParams)) {
-            return false;
-        }
-        $error = null;
-        if ($validParams['status'] === 'declined') {
-            $error = $validParams['reason'];
-        }
-
-        $transactionDesc = (is_null($error)) ? ' ' : ' Reason:  <b>' . $error . '</b>';
-        $transactionDesc .= (isset($validParams[ResponseFields::TEST_MODE])) &&
-        (int)$validParams[ResponseFields::TEST_MODE] === 1 ? '<b> TEST </b>' : ' ';
-        return $transactionDesc;
     }
 }

@@ -101,8 +101,7 @@ class TpayService
         $orderAmount = (double)number_format($order->getGrandTotal(), 2, '.', '');
         $emailNotify = false;
 
-        if (!isset($validParams[ResponseFields::STATUS]) || (int)$validParams[ResponseFields::RESULT] !== 1
-            || $validParams[ResponseFields::STATUS] !== 'correct'
+        if (!isset($validParams[ResponseFields::STATUS]) || $validParams[ResponseFields::STATUS] !== 'correct'
             || ((double)number_format($validParams[ResponseFields::AMOUNT], 2, '.', '') !== $orderAmount)
         ) {
             if ($order->getState() != Order::STATE_HOLDED) {

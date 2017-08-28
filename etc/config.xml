@@ -12,7 +12,7 @@
     <default>
         <payment>
             <tpaycom_magento2cards>
-                <order_status>pending</order_status>
+                <order_status>pending_payment</order_status>
                 <active>1</active>
                 <model>tpaycom\magento2cards\Model\TpayCards</model>
                 <title>tpay.com - płatności online kartą</title>
@@ -22,7 +22,7 @@
                 <can_use_checkout>1</can_use_checkout>
                 <can_authorize>0</can_authorize>
                 <can_capture>0</can_capture>
-                <can_refund>0</can_refund>
+                <can_refund>1</can_refund>
                 <can_void>0</can_void>
                 <can_cancel>1</can_cancel>
             </tpaycom_magento2cards>

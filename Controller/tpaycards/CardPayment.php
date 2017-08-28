@@ -18,6 +18,7 @@ use tpaycom\magento2cards\lib\CardAPI;
 use tpaycom\magento2cards\lib\PaymentCardFactory;
 use tpaycom\magento2cards\lib\ResponseFields;
 use tpaycom\magento2cards\lib\Validate;
+use tpaycom\magento2cards\Model\ApiProvider;
 use tpaycom\magento2cards\Model\CardsTransactionFactory;
 use tpaycom\magento2cards\Model\CardTransaction;
 use tpaycom\magento2cards\Service\TpayService;
@@ -92,21 +93,21 @@ class CardPayment extends Action
     public function execute()
     {
         $orderId = $this->checkoutSession->getLastRealOrderId();
-
+        $this->apiFactory = (new ApiProvider($this->tpay, $this->paymentCardFactory))->getTpayCardAPI();
         if ($orderId) {
             $paymentData = $this->tpayService->getPaymentData($orderId);
             $this->tpayService->setOrderStatePendingPayment($orderId);
             $additionalPaymentInformation = $paymentData['additional_information'];
-            $paymentCardFactory = $this->createTpayCardFactory();
+            $paymentCardFactory = (new ApiProvider($this->tpay, $this->paymentCardFactory))->getTpayPaymentCardFactory();
             $result = $this->makeCardPayment($orderId, $additionalPaymentInformation);
             $this->checkoutSession->unsQuoteId();
 
             if (isset($result[ResponseFields::URL3DS])) {
                 $url3ds = $result[ResponseFields::URL3DS];
+                $this->tpayService->addCommentToHistory($orderId, '3DS Transaction link ' . $url3ds);
                 return $this->_redirect($url3ds);
 
             } else {
-
                 $localData = $this->tpay->getTpayFormData($orderId);
 
                 if (isset($result[ResponseFields::STATUS]) && (int)$result[ResponseFields::STATUS] === 'correct') {
@@ -144,21 +145,4 @@ class CardPayment extends Action
         );
     }
 
-    private function createTpayCardFactory()
-    {
-        $apiPass = $this->tpay->getApiPassword();
-        $apiKey = $this->tpay->getApiKey();
-        $verificationCode = $this->tpay->getVerificationCode();
-        $hashAlg = $this->tpay->getHashType();
-        $RSAKey = $this->tpay->getRSAKey();
-        $this->apiFactory = new CardAPI($apiKey, $apiPass, $verificationCode, $hashAlg);
-
-        return $this->paymentCardFactory->create([
-            'apiKey'  => $apiKey,
-            'apiPass' => $apiPass,
-            'code'    => $verificationCode,
-            'hashAlg' => $hashAlg,
-            'keyRSA'  => $RSAKey
-        ]);
-    }
 }

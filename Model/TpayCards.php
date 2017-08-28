@@ -18,13 +18,18 @@ use Magento\Framework\Model\Context;
 use Magento\Framework\Registry;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\Escaper;
+use Magento\Framework\Validator\Exception;
 use Magento\Payment\Helper\Data;
+use Magento\Payment\Model\InfoInterface;
 use Magento\Payment\Model\Method\AbstractMethod;
 use Magento\Payment\Model\Method\Adapter;
 use Magento\Payment\Model\Method\Logger;
 use Magento\Quote\Api\Data\CartInterface;
+use Magento\Sales\Model\Order\Payment\Transaction;
 use tpaycom\magento2cards\Api\Sales\CardsOrderRepositoryInterface;
 use tpaycom\magento2cards\Api\TpayCardsInterface;
+use tpaycom\magento2cards\Controller\tpaycards\CardRefunds;
+use tpaycom\magento2cards\lib\PaymentCardFactory;
 use tpaycom\magento2cards\lib\Validate;
 
 /**
@@ -39,10 +44,10 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
      */
     protected $_code = self::CODE;
     protected $_isGateway = true;
-    protected $_canCapture = true;
-    protected $_canCapturePartial = true;
-    protected $_canRefund = false;
-    protected $_canRefundInvoicePartial = false;
+    protected $_canCapture = false;
+    protected $_canCapturePartial = false;
+    protected $_canRefund = true;
+    protected $_canRefundInvoicePartial = true;
     /*#@-*/
 
     protected $availableCurrencyCodes = ['PLN'];
@@ -277,6 +282,39 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
             static::CARDDATA,
             isset($additionalData[static::CARDDATA]) ? $additionalData[static::CARDDATA] : ''
         );
+
+        return $this;
+    }
+
+    /**
+     * Payment refund
+     *
+     * @param InfoInterface $payment
+     * @param float $amount
+     * @return $this
+     * @throws Exception
+     */
+    public function refund(InfoInterface $payment, $amount)
+    {
+        $refunds = new CardRefunds($this->getApiKey(), $this->getApiPassword(), $this->getVerificationCode(),
+            $this->getHashType()
+        );
+        $transactionId = $refunds->makeRefund($payment, $amount);
+        try {
+            if ($transactionId) {
+                $payment
+                    ->setTransactionId(Transaction::TYPE_REFUND)
+                    ->setParentTransactionId($payment->getParentTransactionId())
+                    ->setIsTransactionClosed(1)
+                    ->setShouldCloseParentTransaction(1);
+            }
+
+        } catch (\Exception $e) {
+            $this->debugData(['transaction_id' => $transactionId, 'exception' => $e->getMessage()]);
+            $this->_logger->error(__('Payment refunding error.'));
+            throw new Exception(__('Payment refunding error.'));
+        }
+
 
         return $this;
     }

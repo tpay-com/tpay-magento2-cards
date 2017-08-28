@@ -497,7 +497,6 @@ class CardAPI
      * if sale_auth is passed amount and currency is not necessary -
      * system will take default values from the specified sale. With sale_auth refund can be made only once
      *
-     * @param string $clientAuthCode client auth code
      * @param string|bool $saleAuthCode sale auth code
      * @param string $refundDesc refund description
      * @param float|null $amount amount
@@ -508,66 +507,14 @@ class CardAPI
      *
      * @throws TException
      */
-    public function refund($clientAuthCode, $saleAuthCode, $refundDesc, $amount = null, $currency = '985', $lang = 'pl')
+    public function refund($saleAuthCode, $refundDesc, $amount = null, $currency = '985', $lang = 'pl')
     {
-        $errors = array();
-        /*
-         * 	required clientAuthCode or sale_auth, refund_desc and amount if only clientAuthCode passed
-         */
-        if (!is_string($clientAuthCode) || strlen($clientAuthCode) === 0) {
-            $errors[] = static::EMPTYCODE;
-        } else {
-            if (strlen($clientAuthCode) !== 40) {
-                $errors[] = static::INVALIDCODE;
-            }
-        }
-
-        if (!is_string($saleAuthCode) || strlen($saleAuthCode) === 0) {
-            $errors[] = 'Sale auth code is empty.';
-        } else {
-            if (strlen($saleAuthCode) !== 40) {
-                $errors[] = 'Sale auth code is invalid.';
-            }
-        }
-
-        if (!is_string($refundDesc) || strlen($refundDesc) === 0) {
-            $errors[] = 'Refund desc is empty.';
-        } else {
-            if (strlen($refundDesc) > 128) {
-                $errors[] = 'Refund desc is too long. Max 128 characters.';
-            }
-        }
-
-        if ($amount != null) {
-            $amount = number_format(str_replace(array(',', ' '), array('.', ''), $amount), 2, '.', '');
-
-        } else {
-            if ($clientAuthCode && !$saleAuthCode) {
-                $errors[] = 'Sale auth is false.';
-            }
-        }
-
-        if (!isset($clientAuthCode) && !isset($saleAuthCode)) {
-            $errors[] = 'Cli auth is not set and sale auth is not set.';
-        }
-
-        if (!is_int($currency) && strlen($currency) != 3) {
-            $errors[] = 'Currency is invalid.';
-        }
-
-        if (count($errors) > 0) {
-            throw new TException(sprintf('%s', implode(' ', $errors)));
-        }
 
         $params[static::METHOD] = 'refund';
-        $params[static::DESC] = $refundDesc;
-
-        if ($clientAuthCode) {
-            $params[static::CLIAUTH] = $clientAuthCode;
-        }
         if ($saleAuthCode) {
             $params[static::SALEAUTH] = $saleAuthCode;
         }
+        $params[static::DESC] = $refundDesc;
         if ($amount) {
             $params[static::AMOUNT] = $amount;
         }

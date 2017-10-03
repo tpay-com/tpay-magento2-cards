@@ -173,6 +173,14 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
     /**
      * {@inheritdoc}
      */
+    public function getInvoiceSendMail()
+    {
+        return $this->getConfigData('send_invoice_email');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getTpayFormData($orderId = null)
     {
         $order = $this->getOrder($orderId);

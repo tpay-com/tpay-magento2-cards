@@ -17,6 +17,7 @@ use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface;
 use Magento\Sales\Model\Order;
 use tpaycom\magento2cards\Api\Sales\CardsOrderRepositoryInterface;
+use tpaycom\magento2cards\Api\TpayCardsInterface;
 use tpaycom\magento2cards\lib\ResponseFields;
 
 /**
@@ -102,15 +103,17 @@ class TpayService
      * @param int $orderId
      * @param array $validParams
      *
+     * @param TpayCardsInterface $tpayModel
      * @return bool|Order
      */
-    public function setOrderStatus($orderId, array $validParams)
+    public function setOrderStatus($orderId, array $validParams, $tpayModel)
     {
         /** @var Order $order */
         $order = $this->orderRepository->getByIncrementId($orderId);
         if (!$order->getId()) {
             return false;
         }
+        $sendNewInvoiceMail = (bool)$tpayModel->getInvoiceSendMail();
         $transactionDesc = $this->getTransactionDesc($validParams);
         $orderAmount = (double)number_format($order->getGrandTotal(), 2, '.', '');
         $emailNotify = false;
@@ -129,7 +132,7 @@ class TpayService
                 $emailNotify = true;
             }
             $state = Order::STATE_PROCESSING;
-            $this->setInvoice($order);
+            $this->setInvoice($order, $sendNewInvoiceMail);
             $this->setTransaction($order, $validParams);
         }
 
@@ -170,6 +173,39 @@ class TpayService
 
     /**
      * @param OrderInterface $order
+     * @param bool $sendMail
+     * @throws LocalizedException
+     */
+    private function setInvoice($order, $sendMail)
+    {
+        if ($order->canInvoice()) {
+            // Create invoice for this order
+            $invoice = $this->objectManager->create('Magento\Sales\Model\Service\InvoiceService')->prepareInvoice($order);
+
+            // Make sure there is a qty on the invoice
+            if (!$invoice->getTotalQty()) {
+                throw new LocalizedException(
+                    __('You can\'t create an invoice without products.')
+                );
+            }
+
+            // Register as invoice item
+            $invoice->setRequestedCaptureCase(Invoice::NOT_CAPTURE)->register();
+            if ($sendMail) {
+                $this->objectManager->create('Magento\Sales\Model\Order\Email\Sender\InvoiceSender')->send($invoice);
+            }
+
+            $order->save();
+            $transaction = $this->objectManager->create('Magento\Framework\DB\Transaction')
+                ->addObject($invoice)
+                ->addObject($invoice->getOrder());
+
+            $transaction->save();
+        }
+    }
+
+    /**
+     * @param OrderInterface $order
      * @param array $validParams
      */
     private function setTransaction($order, $validParams)
@@ -200,35 +236,5 @@ class TpayService
                 $object->save();
             }
         }
-    }
-
-    /**
-     * @param OrderInterface $order
-     * @throws LocalizedException
-     */
-    private function setInvoice($order)
-    {
-        if ($order->canInvoice()) {
-            // Create invoice for this order
-            $invoice = $this->objectManager->create('Magento\Sales\Model\Service\InvoiceService')->prepareInvoice($order);
-
-            // Make sure there is a qty on the invoice
-            if (!$invoice->getTotalQty()) {
-                throw new LocalizedException(
-                    __('You can\'t create an invoice without products.')
-                );
-            }
-
-        }
-        // Register as invoice item
-        $invoice->setRequestedCaptureCase(Invoice::NOT_CAPTURE);
-        $invoice->register();
-        $order->save();
-        $transaction = $this->objectManager->create('Magento\Framework\DB\Transaction')
-            ->addObject($invoice)
-            ->addObject($invoice->getOrder());
-
-        $transaction->save();
-
     }
 }

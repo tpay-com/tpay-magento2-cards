@@ -67,4 +67,11 @@ interface TpayCardsInterface
      * @return string
      */
     public function getPaymentRedirectUrl();
+
+    /**
+     * Check if send an email about the new invoice to customer
+     *
+     * @return string
+     */
+    public function getInvoiceSendMail();
 }

@@ -115,7 +115,7 @@ class CardPayment extends Action
                         $result['sale_auth'], '', $result['card'], $localData['kwota'], $result['date'],
                         $localData['currency']);
                 }
-                $this->tpayService->setOrderStatus($orderId, $result);
+                $this->tpayService->setOrderStatus($orderId, $result, $this->tpay);
 
                 return ((int)$result[ResponseFields::RESULT] === 1 && $result[ResponseFields::STATUS] === 'correct') ?
                     $this->_redirect('magento2cards/tpaycards/success') : $this->_redirect(static::ERROR_PATH);

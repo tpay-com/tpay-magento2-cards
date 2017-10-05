@@ -10,22 +10,27 @@
 namespace tpaycom\magento2cards\Service;
 
 use Magento\Framework\App\ObjectManager;
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Magento\Sales\Model\Order\Invoice;
+use Magento\Sales\Model\Order\Payment\Operations\RegisterCaptureNotificationOperation;
 use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface;
 use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Service\InvoiceService;
 use tpaycom\magento2cards\Api\Sales\CardsOrderRepositoryInterface;
 use tpaycom\magento2cards\Api\TpayCardsInterface;
 use tpaycom\magento2cards\lib\ResponseFields;
+use Magento\Framework\Event\ManagerInterface as EventManagerInterface;
+use Magento\Sales\Model\Order\Payment\State\CommandInterface;
+use Magento\Sales\Model\Order\Payment\Transaction\ManagerInterface;
+use Magento\Sales\Model\Order\Payment;
 
 /**
  * Class TpayService
  *
  * @package tpaycom\magento2cards\Service
  */
-class TpayService
+class TpayService extends RegisterCaptureNotificationOperation
 {
     /**
      * @var CardsOrderRepositoryInterface
@@ -34,6 +39,8 @@ class TpayService
 
     protected $builder;
 
+    protected $invoiceService;
+
     private $objectManager;
 
     /**
@@ -41,14 +48,30 @@ class TpayService
      *
      * @param CardsOrderRepositoryInterface $orderRepository
      * @param BuilderInterface $builder
+     * @param CommandInterface $stateCommand
+     * @param BuilderInterface $transactionBuilder
+     * @param ManagerInterface $transactionManager
+     * @param EventManagerInterface $eventManager
+     * @param InvoiceService $invoiceService
      */
     public function __construct(
         CardsOrderRepositoryInterface $orderRepository,
-        BuilderInterface $builder
+        BuilderInterface $builder,
+        CommandInterface $stateCommand,
+        BuilderInterface $transactionBuilder,
+        ManagerInterface $transactionManager,
+        EventManagerInterface $eventManager,
+        InvoiceService $invoiceService
     ) {
         $this->orderRepository = $orderRepository;
         $this->builder = $builder;
         $this->objectManager = ObjectManager::getInstance();
+        $this->invoiceService = $invoiceService;
+        parent::__construct(
+            $stateCommand,
+            $transactionBuilder,
+            $transactionManager,
+            $eventManager);
     }
 
     /**
@@ -66,7 +89,7 @@ class TpayService
             ->setTotalPaid(0.00)
             ->setBaseTotalPaid(0.00)
             ->setBaseTotalDue($order->getBaseGrandTotal())
-            ->setState(\Magento\Sales\Model\Order::STATE_PENDING_PAYMENT)
+            ->setState(Order::STATE_PENDING_PAYMENT)
             ->addStatusToHistory(true);
 
         $order->save();
@@ -132,16 +155,20 @@ class TpayService
                 $emailNotify = true;
             }
             $state = Order::STATE_PROCESSING;
-            $this->setInvoice($order, $sendNewInvoiceMail);
-            $this->setTransaction($order, $validParams);
+            $this->registerCaptureNotificationTpay($order->getPayment(), $order->getGrandTotal(), $validParams);
         }
-
         $order->setState($state);
-
         if ($emailNotify) {
             $order->setSendEmail(true);
         }
         $order->save();
+        if ($sendNewInvoiceMail) {
+            foreach ($order->getInvoiceCollection() as $invoice) {
+                $invoice_id = $invoice->getIncrementId();
+                $this->invoiceService->notify($invoice_id);
+            }
+        }
+
         return $order;
     }
 
@@ -172,69 +199,68 @@ class TpayService
     }
 
     /**
-     * @param OrderInterface $order
-     * @param bool $sendMail
-     * @throws LocalizedException
-     */
-    private function setInvoice($order, $sendMail)
-    {
-        if ($order->canInvoice()) {
-            // Create invoice for this order
-            $invoice = $this->objectManager->create('Magento\Sales\Model\Service\InvoiceService')->prepareInvoice($order);
-
-            // Make sure there is a qty on the invoice
-            if (!$invoice->getTotalQty()) {
-                throw new LocalizedException(
-                    __('You can\'t create an invoice without products.')
-                );
-            }
-
-            // Register as invoice item
-            $invoice->setRequestedCaptureCase(Invoice::NOT_CAPTURE)->register();
-            if ($sendMail) {
-                $this->objectManager->create('Magento\Sales\Model\Order\Email\Sender\InvoiceSender')->send($invoice);
-            }
-
-            $order->save();
-            $transaction = $this->objectManager->create('Magento\Framework\DB\Transaction')
-                ->addObject($invoice)
-                ->addObject($invoice->getOrder());
-
-            $transaction->save();
-        }
-    }
-
-    /**
-     * @param OrderInterface $order
+     * Registers capture notification.
+     *
+     * @param OrderPaymentInterface $payment
+     * @param string|float $amount
      * @param array $validParams
+     * @param bool|int $skipFraudDetection
      */
-    private function setTransaction($order, $validParams)
-    {
-        $payment = $order->getPayment();
+    private function registerCaptureNotificationTpay(
+        OrderPaymentInterface $payment,
+        $amount,
+        $validParams,
+        $skipFraudDetection = false
+    ) {
+        /**
+         * @var $payment Payment
+         */
+        $payment->setTransactionId(
+            $this->transactionManager->generateTransactionId(
+                $payment,
+                Transaction::TYPE_CAPTURE,
+                $payment->getAuthorizationTransaction()
+            )
+        );
 
-        if ($payment) {
-            $payment->setLastTransId($validParams[ResponseFields::SALE_AUTH]);
-            $payment->setTransactionId($validParams[ResponseFields::SALE_AUTH]);
-            $payment->setAdditionalInformation(
-                [\Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS => (array)$validParams]
-            );
-            $trans = $this->builder;
-            $transaction = $trans->setPayment($payment)
-                ->setOrder($order)
-                ->setTransactionId($validParams[ResponseFields::SALE_AUTH])
-                ->setAdditionalInformation(
-                    [\Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS => (array)$validParams]
-                )
-                ->setFailSafe(true)
-                //build method creates the transaction and returns the object
-                ->build(\Magento\Sales\Model\Order\Payment\Transaction::TYPE_CAPTURE);
+        $order = $payment->getOrder();
+        $amount = (double)$amount;
+        $invoice = $this->getInvoiceForTransactionId($order, $payment->getTransactionId());
 
-            $payment->setParentTransactionId(null)->registerCaptureNotification($order->getGrandTotal());
-            $payment->save();
-            $transaction->save();
-            foreach ($order->getRelatedObjects() as $object) {
-                $object->save();
+        // register new capture
+        if (!$invoice) {
+            if ($payment->isSameCurrency() && $payment->isCaptureFinal($amount)) {
+                $invoice = $order->prepareInvoice()->register();
+                $invoice->setOrder($order);
+                $order->addRelatedObject($invoice);
+                $payment->setCreatedInvoice($invoice);
+                $payment->setShouldCloseParentTransaction(true);
+            } else {
+                $payment->setIsFraudDetected(!$skipFraudDetection);
+                $this->updateTotals($payment, ['base_amount_paid_online' => $amount]);
             }
         }
+
+        if (!$payment->getIsTransactionPending()) {
+            if ($invoice && Invoice::STATE_OPEN == $invoice->getState()) {
+                $invoice->setOrder($order);
+                $invoice->pay();
+                $this->updateTotals($payment, ['base_amount_paid_online' => $amount]);
+                $order->addRelatedObject($invoice);
+            }
+        }
+
+        $message = $this->stateCommand->execute($payment, $amount, $order);
+        $payment->setTransactionId($validParams[ResponseFields::SALE_AUTH])
+            ->setTransactionAdditionalInfo(Transaction::RAW_DETAILS, $validParams);
+        $transaction = $payment->addTransaction(
+            Transaction::TYPE_CAPTURE,
+            $invoice,
+            true
+        );
+        $message = $payment->prependMessage($message);
+        $payment->addTransactionCommentsToOrder($transaction, $message);
+
     }
+
 }

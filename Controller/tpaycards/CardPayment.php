@@ -105,6 +105,9 @@ class CardPayment extends Action
             if (isset($result[ResponseFields::URL3DS])) {
                 $url3ds = $result[ResponseFields::URL3DS];
                 $this->tpayService->addCommentToHistory($orderId, '3DS Transaction link ' . $url3ds);
+                $payment = $this->tpayService->getPayment($orderId);
+                $payment->setAdditionalData($url3ds);
+                $payment->save();
                 return $this->_redirect($url3ds);
 
             } else {

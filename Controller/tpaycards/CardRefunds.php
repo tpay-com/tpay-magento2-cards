@@ -44,10 +44,11 @@ class CardRefunds
     {
         $tpayApi = new CardAPI($this->apiKey, $this->apiPass, $this->verificationCode, $this->hashType);
         $transactionId = $payment->getParentTransactionId();
-        $result = $tpayApi->refund($transactionId, 'Magento online refund', $amount, '');
+
+        $result = $tpayApi->refund($transactionId, 'Zamówienie ' . $payment->getParentId(), $amount);
 
         if ((int)$result['result'] === 1 && isset($result['status']) && $result['status'] === 'correct') {
-            return true;
+            return $result['sale_auth'];
         } else {
             $errDesc = isset($result['err_desc']) ? ' error description: ' . $result['err_desc'] : '';
             $errCode = isset($result['err_code']) ? ' error code: ' . $result['err_code'] : '';
@@ -56,6 +57,5 @@ class CardRefunds
         }
 
     }
-
 
 }

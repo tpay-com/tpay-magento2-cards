@@ -507,7 +507,7 @@ class CardAPI
      *
      * @throws TException
      */
-    public function refund($saleAuthCode, $refundDesc, $amount = null, $currency = '985', $lang = 'pl')
+    public function refund($saleAuthCode, $refundDesc, $amount = null, $lang = 'pl')
     {
 
         $params[static::METHOD] = 'refund';
@@ -517,9 +517,6 @@ class CardAPI
         $params[static::DESC] = $refundDesc;
         if ($amount) {
             $params[static::AMOUNT] = $amount;
-        }
-        if ($currency) {
-            $params[static::CURRENCY] = $currency;
         }
         if ($lang) {
             $params[static::LANGUAGE] = $lang;

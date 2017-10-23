@@ -311,7 +311,7 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
         try {
             if ($transactionId) {
                 $payment
-                    ->setTransactionId(Transaction::TYPE_REFUND)
+                    ->setTransactionId($transactionId)
                     ->setParentTransactionId($payment->getParentTransactionId())
                     ->setIsTransactionClosed(1)
                     ->setShouldCloseParentTransaction(1);

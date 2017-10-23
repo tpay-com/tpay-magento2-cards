@@ -95,7 +95,8 @@ class CardPayment extends Action
         $orderId = $this->checkoutSession->getLastRealOrderId();
         $this->apiFactory = (new ApiProvider($this->tpay, $this->paymentCardFactory))->getTpayCardAPI();
         if ($orderId) {
-            $paymentData = $this->tpayService->getPaymentData($orderId);
+            $payment = $this->tpayService->getPayment($orderId);
+            $paymentData = $payment->getData();
             $this->tpayService->setOrderStatePendingPayment($orderId);
             $additionalPaymentInformation = $paymentData['additional_information'];
             $paymentCardFactory = (new ApiProvider($this->tpay, $this->paymentCardFactory))->getTpayPaymentCardFactory();
@@ -105,9 +106,9 @@ class CardPayment extends Action
             if (isset($result[ResponseFields::URL3DS])) {
                 $url3ds = $result[ResponseFields::URL3DS];
                 $this->tpayService->addCommentToHistory($orderId, '3DS Transaction link ' . $url3ds);
-                $payment = $this->tpayService->getPayment($orderId);
-                $payment->setAdditionalData($url3ds);
-                $payment->save();
+                $paymentData['additional_information']['transaction_url'] = $url3ds;
+                $payment->setData($paymentData)->save();
+
                 return $this->_redirect($url3ds);
 
             } else {
@@ -133,7 +134,7 @@ class CardPayment extends Action
      * @param int $orderId
      * @param array $additionalPaymentInformation
      *
-     * @return bool
+     * @return array
      */
     protected function makeCardPayment($orderId, array $additionalPaymentInformation)
     {

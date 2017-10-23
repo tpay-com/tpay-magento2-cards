@@ -71,8 +71,8 @@ class Redirect extends Action
         if (!$orderId || !$uid) {
             return $this->_redirect('checkout/cart');
         }
-
-        $paymentData = $this->tpayService->getPaymentData($orderId);
+        $payment = $this->tpayService->getPayment($orderId);
+        $paymentData = $payment->getData();
         $additionalPaymentInformation = $paymentData['additional_information'];
         if (!empty($additionalPaymentInformation['card_data'])
         ) {
@@ -81,6 +81,5 @@ class Redirect extends Action
             return $this->_redirect('checkout/cart');
         }
     }
-
 
 }

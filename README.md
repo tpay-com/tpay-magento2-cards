@@ -13,7 +13,7 @@ Manual install
 3. Enter following commands to enable module:
 
     ```bash
-    php bin/magento module:enable tpaycom_magento2cards  
+    php bin/magento module:enable tpaycom_tpaycards  
     php bin/magento setup:upgrade
     ```
 4. Enable and configure module in Magento Admin under Stores/Configuration/Payment Methods/tpay.com credit cards

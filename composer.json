@@ -2,7 +2,7 @@
   "name": "tpaycom/magento2cards",
   "description": "tpay.com card payments module",
   "type": "magento2-module",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "license": [
     "OSL-3.0"
   ],
@@ -20,7 +20,7 @@
   "authors": [
     {
       "name": "tpay.com",
-      "homepage": "https://www.tpay.com/"
+      "homepage": "https://tpay.com/"
     }
   ]
 }

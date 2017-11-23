@@ -71,15 +71,7 @@ class Redirect extends Action
         if (!$orderId || !$uid) {
             return $this->_redirect('checkout/cart');
         }
-        $payment = $this->tpayService->getPayment($orderId);
-        $paymentData = $payment->getData();
-        $additionalPaymentInformation = $paymentData['additional_information'];
-        if (!empty($additionalPaymentInformation['card_data'])
-        ) {
-            return $this->_redirect('magento2cards/tpaycards/CardPayment');
-        } else {
-            return $this->_redirect('checkout/cart');
-        }
+        return $this->_redirect('magento2cards/tpaycards/CardPayment');
     }
 
 }

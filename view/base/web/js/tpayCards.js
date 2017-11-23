@@ -1651,6 +1651,7 @@ require(['jquery', 'mage/translate'], function ($, $t) {
                 }
                 if (type !== '') {
                     $('#' + type).addClass('hover');
+                    $('#card_vendor').val(type);
                 }
             }
         });

@@ -18,11 +18,6 @@ use \tpaycom\magento2cards\Model\TpayCards;
 
 abstract class CardsTpaycom extends \Magento\Framework\App\Action\Action
 {
-
-
-    // Check Real IP if server is proxy, balancer...
-    const CHECK_REAL_IP = false;
-
     // Local IP address
     const LOCAL_IP = '127.0.0.1';
 

@@ -207,15 +207,10 @@ class PaymentCard
      *
      * @return bool
      */
-    private function checkServer()
+    public function checkServer()
     {
-        if (!isset($_SERVER[static::REMOTE_ADDR])
-            || !in_array($_SERVER[static::REMOTE_ADDR], $this->secureIP)
-        ) {
-            return false;
-        }
-
-        return true;
+        return (isset($_SERVER[static::REMOTE_ADDR])
+            && in_array($_SERVER[static::REMOTE_ADDR], $this->secureIP));
     }
 
 
@@ -304,14 +299,32 @@ class PaymentCard
      * @param string $saleDate
      * @param string $currency
      *
+     * @param string $cliAuth
      * @throws TException
      */
-    public function validateSign($sign, $testMode, $saleAuth, $orderId, $card, $amount, $saleDate, $currency = '985')
-    {
-        if ($sign !== hash($this->hashAlg, 'sale' . $testMode . $saleAuth . $orderId . $card .
+    public function validateSign(
+        $sign,
+        $testMode,
+        $saleAuth,
+        $orderId,
+        $card,
+        $amount,
+        $saleDate,
+        $currency = '985',
+        $cliAuth = ''
+    ) {
+        if ($sign !== hash($this->hashAlg, 'sale' . $testMode . $saleAuth . $orderId . $cliAuth . $card .
                 $currency . $amount . $saleDate . 'correct' . $this->code)
         ) {
             throw new TException('Card payment - invalid checksum');
+        }
+    }
+
+    public function validateDeregisterSign($sign, $cliAuth, $date, $testMode)
+    {
+        if ($sign !== hash($this->hashAlg, 'deregister' . $testMode . $cliAuth . $date . $this->code)
+        ) {
+            throw new TException('Card deregister - invalid checksum');
         }
     }
 

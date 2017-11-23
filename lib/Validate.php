@@ -9,8 +9,6 @@
 
 namespace tpaycom\magento2cards\lib;
 
-use Magento\Catalog\Test\Block\Adminhtml\Product\Edit\Section\Options\Type\Field;
-
 /**
  * Class Validate
  *
@@ -20,6 +18,8 @@ use Magento\Catalog\Test\Block\Adminhtml\Product\Edit\Section\Options\Type\Field
  */
 class Validate
 {
+    private static $responseFields = [];
+
     private static $cardPaymentLanguages = array(
         'pl' => 'pl_PL',
         'en' => 'en_EN',
@@ -99,16 +99,16 @@ class Validate
 
         switch ($paymentType) {
             case static::PAYMENT_TYPE_CARD:
-                $responseFields = ResponseFieldsSettings::$fields;
+                static::$responseFields = ResponseFieldsSettings::$fields;
                 break;
-//            case static::CARD_DEREGISTER:
-//                $responseFields = ResponseFieldsSettings::$fields;
-//                break;
+            case static::CARD_DEREGISTER:
+                static::$responseFields = DeregisterResponseFieldsSettings::$fields;
+                break;
             default:
                 throw new TException(sprintf('unknown payment type %s', $paymentType));
         }
 
-        foreach ($responseFields as $fieldName => $field) {
+        foreach (static::$responseFields as $fieldName => $field) {
             if (Util::post($fieldName, FieldProperties::STRING) === false) {
                 if ($field[FieldProperties::REQUIRED] === true) {
                     $missed[] = $fieldName;
@@ -173,7 +173,7 @@ class Validate
      */
     public static function validateOne($name, $value)
     {
-        $requestFields = ResponseFieldsSettings::$fields;
+        $requestFields = static::$responseFields;
 
         if (!is_string($name)) {
             throw new TException('Invalid field name');
@@ -205,7 +205,7 @@ class Validate
      */
     public static function fieldValidation($value, $name)
     {
-        $fieldConfig = ResponseFieldsSettings::$fields[$name];
+        $fieldConfig = static::$responseFields[$name];
         foreach ($fieldConfig[FieldProperties::VALIDATION] as $validator) {
             switch ($validator) {
                 case 'uint':

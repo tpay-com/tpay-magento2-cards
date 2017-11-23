@@ -46,13 +46,26 @@ define(
                 return window.checkoutConfig.tpaycards.payment.addCSS;
             },
             getData: function () {
+                var savedId = 'new';
+                $('input[id^=cardN]').each(function () {
+                    if ($(this).is(":checked")) {
+                        savedId = $(this).val();
+                    }
+                });
                 var parent = this._super(),
                     paymentData = {};
                 paymentData['card_data'] = $('input[name="card_data"]').val();
+                paymentData['card_save'] = $('input[name="card_save"]').is(":checked");
+                paymentData['card_id'] = savedId;
+                paymentData['card_vendor'] = $('input[name="card_vendor"]').val();
 
                 return $.extend(true, parent, {'additional_data': paymentData});
             },
-
+            showSaveBox: function () {
+                if (window.checkoutConfig.tpaycards.payment.isCustomerLoggedIn) {
+                    $('.amPmCheckbox').css('display', 'block');
+                }
+            },
             isActive: function () {
                 return true;
             }

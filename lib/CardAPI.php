@@ -69,6 +69,8 @@ class CardAPI
      */
     private $hashAlg;
 
+    private $method;
+
     public function __construct($cardApiKey, $cardApiPassword, $verificationCode = '', $hashAlg = 'sha1')
     {
         Validate::validateCardApiKey($cardApiKey);
@@ -165,6 +167,9 @@ class CardAPI
             $enablePowUrl));
 
         $params[static::SIGN] = hash($this->hashAlg, implode('', $params) . $this->verificationCode);
+        if ($enablePowUrl && $this->method === 'register_sale') {
+            $params['enable_pow_url'] = '1';
+        }
         $params[static::APIPASS] = $this->apiPass;
 
         $params = array_merge($params, $this->checkReturnUrls($powUrl, $powUrlBlad));
@@ -182,7 +187,6 @@ class CardAPI
      */
     private function recogniseMethod($direct = false, $saledata = null)
     {
-
         if ($direct && !empty($saledata)) {
             $params = array(
                 static::METHOD => 'directsale',
@@ -193,10 +197,12 @@ class CardAPI
                 static::METHOD => 'securesale',
                 'card'         => $saledata,
             );
+            $this->method = 'securesale';
         } else {
             $params = array(
                 static::METHOD => 'register_sale',
             );
+            $this->method = 'register_sale';
         }
         return $params;
     }
@@ -228,10 +234,9 @@ class CardAPI
         if ($lang) {
             $params[static::LANGUAGE] = Validate::validateCardLanguage($lang);
         }
-        if ($enablePowUrl) {
+        if ($enablePowUrl && $this->method === 'securesale') {
             $params['enable_pow_url'] = '1';
         }
-
         return $params;
     }
 
@@ -329,19 +334,14 @@ class CardAPI
     public function presale($clientAuthCode, $saleDescription, $amount, $currency = '985',
                             $orderID = null, $lang = 'pl')
     {
-
         $params = $this->saleValidateAndPrepareParams($clientAuthCode, $saleDescription, $amount,
             $currency, $orderID, $lang, static::PRESALE);
-
-        Util::log('Presale params', print_r($params, true) . ' hash alg ' . $this->hashAlg);
 
         $amount = number_format($amount, 2, '.', '');
 
         $params[static::SIGN] = hash($this->hashAlg, static::PRESALE . $clientAuthCode . $saleDescription .
             $amount . $currency . $orderID . $lang . $this->verificationCode);
         $params[static::APIPASS] = $this->apiPass;
-
-        Util::log('Pre sale params with hash ', print_r($params, true) . 'req url ' . $this->apiURL . $this->apiKey);
 
         return $this->postRequest($this->apiURL . $this->apiKey, $params);
     }
@@ -443,17 +443,15 @@ class CardAPI
         $lang = 'pl'
     )
     {
-
         $params = $this->saleValidateAndPrepareParams($clientAuthCode, $saleDescription,
             $amount, $currency, $orderID, $lang, static::PRESALE);
         $response = $this->postRequest($this->apiURL . $this->apiKey, $params);
 
-        if ($response['result']) {
+        if (isset($response['result']) && (int)$response['result'] === 1) {
             $saleAuthCode = $response[static::SALEAUTH];
             return $this->sale($clientAuthCode, $saleAuthCode);
 
         }
-
         return $response;
     }
 

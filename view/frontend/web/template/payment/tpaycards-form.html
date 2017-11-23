@@ -14,7 +14,14 @@
 
             <p id="tpayRSA" style="display: none" data-bind="html: getRSAkey()"></p>
             <div id="powered_by"></div>
-            <div id="card_payment" style="visibility: visible">
+
+            <div id="saved_card_payment" style="visibility: visible">
+                <input type="radio" name="savedId" id="newCard" value="new">
+                <label for="newCard"><!-- ko i18n: 'Pay with a new card' --><!-- /ko -->
+                </label>
+            </div>
+            <div id="card_form" style="display: none">
+            <div id="card_payment">
                 <label for="card_number" data-bind="i18n: 'Card number'"></label>
                 <input id="card_number" pattern="\d*" autocompletetype="cc-number" size="30" type="tel"
                        autocomplete="off"
@@ -28,15 +35,22 @@
                 <div id="cvc_wrapper">
                     <label for="cvc"><!-- ko i18n: 'CVC' --><!-- /ko --><span
                             data-bind="
-                        attr: {title: $t('For MasterCard, Visa or Discover, these are the last three digits placed next to the card user signature.')},
-                        "
-                            >?</span></label>
+                        attr: {title: $t('For MasterCard, Visa or Discover, these are the last three digits placed next to the card user signature.')}
+                        ">?</span></label>
                     <input id="cvc" maxlength="3" type="tel" autocomplete="off" autocompletetype="cc-cvc"
                            placeholder="000"
                            tabindex="4" value=""/>
                 </div>
-
+                <div class="amPmCheckbox">
+                    <input type="checkbox" id="card_save" name="card_save"/>
+                    <label for="card_save"><!-- ko i18n: 'Save my card' --><!-- /ko --><span
+                            data-bind="
+                        attr: {title: $t('Allow to pay faster for next orders. Card data will be stored on secure tpay.com server.')}
+                        "> ?</span></label>
+                </div>
+                <span data-bind="html: showSaveBox()"></span>
                 <input type="hidden" name="card_data" id="card_data"/>
+                <input type="hidden" name="card_vendor" id="card_vendor"/>
             </div>
 
             <div id="card_icons">
@@ -47,14 +61,14 @@
                 <div class="card_icon" id="jcb"></div>
                 <div class="card_icon" id="amex"></div>
             </div>
-
+            </div>
             <p id="info_msg"></p>
-
 
             <div id="loading_scr" style="display:none"><img
                     data-bind="
                         attr: {src: getTpayLoadingGif()}"
-                    style="vertical-align: middle;"/>&nbsp;&nbsp;<!-- ko i18n: 'Processing data, please wait...' --><!-- /ko -->
+                    style="vertical-align: middle;"/>&nbsp;&nbsp;<!-- ko i18n: 'Processing data, please wait...' -->
+                <!-- /ko -->
             </div>
 
         </div>

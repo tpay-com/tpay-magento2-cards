@@ -13,6 +13,7 @@ use Magento\Checkout\Model\Session;
 use Magento\Framework\Api\AttributeValueFactory;
 use Magento\Framework\Api\ExtensionAttributesFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\DataObject;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Registry;
@@ -53,7 +54,6 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
     protected $availableCurrencyCodes = ['PLN'];
 
     protected $termsURL = 'https://secure.tpay.com/regulamin.pdf';
-
 
     /**
      * @var UrlInterface
@@ -117,41 +117,9 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
     /**
      * {@inheritdoc}
      */
-    public function getApiKey()
-    {
-        return $this->getConfigData('api_key');
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getApiPassword()
-    {
-        return $this->getConfigData('api_pass');
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getVerificationCode()
-    {
-        return $this->getConfigData('verification_code');
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function getRSAKey()
     {
         return $this->getConfigData('rsa_key');
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getHashType()
-    {
-        return $this->getConfigData('hash_type');
     }
 
     /**
@@ -184,15 +152,13 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
     public function getTpayFormData($orderId = null)
     {
         $order = $this->getOrder($orderId);
-
         $billingAddress = $order->getBillingAddress();
         $amount = number_format($order->getGrandTotal(), 2, '.', '');
         $name = $billingAddress->getData('firstname') . ' ' . $billingAddress->getData('lastname');
 
-        $om = \Magento\Framework\App\ObjectManager::getInstance();
+        $om = ObjectManager::getInstance();
         $resolver = $om->get('Magento\Framework\Locale\Resolver');
-        $jezyk = $resolver->getLocale();
-
+        $language = Validate::validateCardLanguage($resolver->getLocale());
 
         return [
             'email'        => $this->escaper->escapeHtml($order->getCustomerEmail()),
@@ -203,7 +169,7 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
             'pow_url_blad' => $this->urlBuilder->getUrl('magento2cards/tpaycards/error'),
             'wyn_url'      => $this->urlBuilder->getUrl('magento2cards/tpaycards/notification'),
             'pow_url'      => $this->urlBuilder->getUrl('magento2cards/tpaycards/success'),
-            'jezyk'        => $jezyk,
+            'jezyk'        => $language,
             'currency'     => $this->getISOCurrencyCode($order->getOrderCurrencyCode()),
         ];
     }
@@ -290,6 +256,21 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
             static::CARDDATA,
             isset($additionalData[static::CARDDATA]) ? $additionalData[static::CARDDATA] : ''
         );
+        $info->setAdditionalInformation(
+            static::CARD_VENDOR,
+            isset($additionalData[static::CARD_VENDOR])
+            && in_array($additionalData[static::CARD_VENDOR], static::SUPPORTED_VENDORS) ?
+                $additionalData[static::CARD_VENDOR] : 'undefined'
+        );
+        $info->setAdditionalInformation(
+            static::CARD_SAVE,
+            isset($additionalData[static::CARD_SAVE]) ? $additionalData[static::CARD_SAVE] === '1' : false
+        );
+        $info->setAdditionalInformation(
+            static::CARD_ID,
+            isset($additionalData[static::CARD_ID]) && is_numeric($additionalData[static::CARD_ID]) ?
+                $additionalData[static::CARD_ID] : false
+        );
 
         return $this;
     }
@@ -325,5 +306,80 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
 
 
         return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getApiKey()
+    {
+        return $this->getConfigData('api_key');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getApiPassword()
+    {
+        return $this->getConfigData('api_pass');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getVerificationCode()
+    {
+        return $this->getConfigData('verification_code');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getHashType()
+    {
+        return $this->getConfigData('hash_type');
+    }
+
+    /**
+     * @param int $orderId
+     * @return string
+     */
+    public function getCustomerId($orderId)
+    {
+        $order = $this->getOrder($orderId);
+        return $order->getCustomerId();
+    }
+
+    /**
+     * check if customer was logged while placing order
+     * @param int $orderId
+     * @return bool
+     */
+    public function isCustomerGuest($orderId)
+    {
+        $order = $this->getOrder($orderId);
+        return $order->getCustomerIsGuest();
+    }
+
+    /**
+     * check if customer is logged in on current session
+     * @return bool
+     */
+    public function isCustomerLoggedIn()
+    {
+        $objectManager = ObjectManager::getInstance();
+        $customerSession = $objectManager->get('Magento\Customer\Model\Session');
+        return $customerSession->isLoggedIn();
+    }
+
+    /**
+     * check for customer ID on current session
+     * @return bool
+     */
+    public function getCheckoutCustomerId()
+    {
+        $objectManager = ObjectManager::getInstance();
+        $customerSession = $objectManager->get('Magento\Customer\Model\Session');
+        return $customerSession->getCustomerId();
     }
 }

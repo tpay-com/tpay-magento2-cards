@@ -144,12 +144,8 @@ class TpayService extends RegisterCaptureNotificationOperation
         if (!isset($validParams[ResponseFields::STATUS]) || $validParams[ResponseFields::STATUS] !== 'correct'
             || ((double)number_format($validParams[ResponseFields::AMOUNT], 2, '.', '') !== $orderAmount)
         ) {
-            if ($order->getState() != Order::STATE_HOLDED) {
-                $emailNotify = true;
-            }
-            $status = __('Payment has been declined: ') . '</br>' . $transactionDesc;
-            $state = Order::STATE_HOLDED;
-            $order->addStatusToHistory($state, $status, true);
+            $comment = __('Payment has been declined. ') . '</br>' . $transactionDesc;
+            $this->addCommentToHistory($orderId, $comment);
         } else {
             if ($order->getState() != Order::STATE_PROCESSING) {
                 $emailNotify = true;

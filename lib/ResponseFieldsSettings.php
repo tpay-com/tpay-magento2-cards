@@ -14,16 +14,16 @@ class ResponseFieldsSettings
         /**
          * Method type
          */
-        FieldProperties::TYPE => array(
+        FieldProperties::TYPE     => array(
             FieldProperties::REQUIRED   => true,
             FieldProperties::TYPE       => FieldProperties::STRING,
             FieldProperties::VALIDATION => array(FieldProperties::OPTIONS),
-            FieldProperties::OPTIONS    => array('sale', 'refund', 'deregister'),
+            FieldProperties::OPTIONS    => array('sale', 'refund'),
         ),
         /**
          * Merchant optional value
          */
-        'order_id'            => array(
+        ResponseFields::ORDER_ID  => array(
             FieldProperties::REQUIRED   => true,
             FieldProperties::TYPE       => FieldProperties::STRING,
             FieldProperties::VALIDATION => array(FieldProperties::STRING, 'maxlength__40')
@@ -31,7 +31,7 @@ class ResponseFieldsSettings
         /**
          * Payment status
          */
-        'status'              => array(
+        ResponseFields::STATUS    => array(
             FieldProperties::REQUIRED   => true,
             FieldProperties::TYPE       => FieldProperties::STRING,
             FieldProperties::VALIDATION => array(FieldProperties::OPTIONS),
@@ -40,7 +40,7 @@ class ResponseFieldsSettings
         /**
          * Message checksum
          */
-        'sign'                => array(
+        ResponseFields::SIGN      => array(
             FieldProperties::REQUIRED   => true,
             FieldProperties::TYPE       => FieldProperties::STRING,
             FieldProperties::VALIDATION => array(FieldProperties::STRING, 'maxlength_128', 'maxlength_40')
@@ -48,15 +48,23 @@ class ResponseFieldsSettings
         /**
          * Created sale/refund id
          */
-        'sale_auth'           => array(
+        ResponseFields::SALE_AUTH => array(
             FieldProperties::REQUIRED   => true,
+            FieldProperties::TYPE       => FieldProperties::STRING,
+            FieldProperties::VALIDATION => array(FieldProperties::STRING, 'maxlength_40')
+        ),
+        /**
+         * Created sale/refund id
+         */
+        ResponseFields::CLI_AUTH  => array(
+            FieldProperties::REQUIRED   => false,
             FieldProperties::TYPE       => FieldProperties::STRING,
             FieldProperties::VALIDATION => array(FieldProperties::STRING, 'maxlength_40')
         ),
         /**
          * Date of accounting/deregistering
          */
-        'date'                => array(
+        ResponseFields::DATE      => array(
             FieldProperties::REQUIRED   => true,
             FieldProperties::TYPE       => FieldProperties::STRING,
             FieldProperties::VALIDATION => array(FieldProperties::STRING)
@@ -64,7 +72,7 @@ class ResponseFieldsSettings
         /**
          * carry value of 1 if account has test mode, otherwise parameter not sent
          */
-        'test_mode'           => array(
+        ResponseFields::TEST_MODE => array(
             FieldProperties::REQUIRED   => false,
             FieldProperties::TYPE       => FieldProperties::STRING,
             FieldProperties::VALIDATION => array(FieldProperties::STRING, 'maxlength_1', 'minlength_1')
@@ -72,7 +80,7 @@ class ResponseFieldsSettings
         /**
          * shortcut for client card number, eg ****5678
          */
-        'card'                => array(
+        ResponseFields::CARD      => array(
             FieldProperties::REQUIRED   => true,
             FieldProperties::TYPE       => FieldProperties::STRING,
             FieldProperties::VALIDATION => array(FieldProperties::STRING, 'maxlength_8', 'minlength_8')
@@ -80,7 +88,7 @@ class ResponseFieldsSettings
         /**
          * transaction amount
          */
-        'amount'              => array(
+        ResponseFields::AMOUNT    => array(
             FieldProperties::REQUIRED   => true,
             FieldProperties::TYPE       => FieldProperties::FLOAT,
             FieldProperties::VALIDATION => array(FieldProperties::FLOAT)
@@ -88,7 +96,7 @@ class ResponseFieldsSettings
         /**
          * transaction currency ex. 985
          */
-        'currency'            => array(
+        ResponseFields::CURRENCY  => array(
             FieldProperties::REQUIRED   => true,
             FieldProperties::TYPE       => FieldProperties::FLOAT,
             FieldProperties::VALIDATION => array(FieldProperties::FLOAT, 'maxlength_3', 'minlength_3')
@@ -96,7 +104,7 @@ class ResponseFieldsSettings
         /**
          * reason of rejection
          */
-        'reason'              => array(
+        ResponseFields::REASON    => array(
             FieldProperties::REQUIRED   => false,
             FieldProperties::TYPE       => FieldProperties::STRING,
             FieldProperties::VALIDATION => array(FieldProperties::STRING)

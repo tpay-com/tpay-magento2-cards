@@ -15,6 +15,7 @@ use Magento\Payment\Model\MethodInterface;
 use tpaycom\magento2cards\Api\TpayCardsInterface;
 
 use Magento\Payment\Helper\Data as PaymentHelper;
+use tpaycom\magento2cards\Service\TpayTokensService;
 
 /**
  * Class TpayCardsConfigProvider
@@ -39,17 +40,25 @@ class TpayCardsConfigProvider implements ConfigProviderInterface
     protected $paymentMethod;
 
     /**
+     * @var TpayTokensService
+     */
+    protected $tokensService;
+
+    /**
      * TpayCardsConfigProvider constructor.
      *
      * @param PaymentHelper $paymentHelper
      * @param Repository $assetRepository
+     * @param TpayTokensService $tokensService
      */
     public function __construct(
         PaymentHelper $paymentHelper,
-        Repository $assetRepository
+        Repository $assetRepository,
+        TpayTokensService $tokensService
     ) {
         $this->assetRepository = $assetRepository;
         $this->paymentHelper = $paymentHelper;
+        $this->tokensService = $tokensService;
     }
 
     /**
@@ -58,16 +67,27 @@ class TpayCardsConfigProvider implements ConfigProviderInterface
     public function getConfig()
     {
         $tpay = $this->getPaymentMethodInstance();
+        $customerTokens = $this->tokensService->getCustomerTokens($tpay->getCheckoutCustomerId());
+        $customerTokensData = [];
+        foreach ($customerTokens as $key => $value) {
+            $customerTokensData[] = [
+                'cardShortCode' => $value['cardShortCode'],
+                'id'            => $value['tokenId'],
+                'vendor'        => $value['vendor'],
+            ];
+        }
 
         $config = [
             'tpaycards' => [
                 'payment' => [
-                    'tpayLogoUrl'       => $this->generateURL('tpaycom_magento2cards::images/logo_tpay.png'),
-                    'getTpayLoadingGif' => $this->generateURL('tpaycom_magento2cards::images/loading.gif'),
-                    'getRSAkey'         => $tpay->getRSAKey(),
-                    'fetchJavaScripts'  => $this->fetchJavaScripts(),
-                    'addCSS'            => $this->createCSS('tpaycom_magento2cards::css/tpaycards.css'),
-                    'redirectUrl'       => $tpay->getPaymentRedirectUrl(),
+                    'tpayLogoUrl'        => $this->generateURL('tpaycom_magento2cards::images/logo_tpay.png'),
+                    'getTpayLoadingGif'  => $this->generateURL('tpaycom_magento2cards::images/loading.gif'),
+                    'getRSAkey'          => $tpay->getRSAKey(),
+                    'fetchJavaScripts'   => $this->fetchJavaScripts(),
+                    'addCSS'             => $this->createCSS('tpaycom_magento2cards::css/tpaycards.css'),
+                    'redirectUrl'        => $tpay->getPaymentRedirectUrl(),
+                    'isCustomerLoggedIn' => $tpay->isCustomerLoggedIn(),
+                    'customerTokens'     => $customerTokensData,
                 ],
             ],
         ];
@@ -104,6 +124,7 @@ class TpayCardsConfigProvider implements ConfigProviderInterface
         $script[] = 'tpaycom_magento2cards::js/jsencrypt.min.js';
         $script[] = 'tpaycom_magento2cards::js/string_routines.js';
         $script[] = 'tpaycom_magento2cards::js/tpayCards.js';
+        $script[] = 'tpaycom_magento2cards::js/renderSavedCards.js';
         $scripts = '';
         foreach ($script as $key => $value) {
             $scripts .= $this->createScript($value);

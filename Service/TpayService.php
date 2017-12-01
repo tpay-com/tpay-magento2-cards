@@ -150,10 +150,9 @@ class TpayService extends RegisterCaptureNotificationOperation
             if ($order->getState() != Order::STATE_PROCESSING) {
                 $emailNotify = true;
             }
-            $state = Order::STATE_PROCESSING;
             $this->registerCaptureNotificationTpay($order->getPayment(), $order->getGrandTotal(), $validParams);
         }
-        $order->setState($state);
+
         if ($emailNotify) {
             $order->setSendEmail(true);
         }

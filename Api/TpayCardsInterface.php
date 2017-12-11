@@ -110,4 +110,10 @@ interface TpayCardsInterface
      * @return int|null
      */
     public function getCheckoutCustomerId();
+
+    /**
+     * @return bool
+     */
+    public function getCardSaveEnabled();
+
 }

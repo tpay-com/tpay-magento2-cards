@@ -45,6 +45,10 @@
                     <label>RSA key</label>
                     <validate>validate-no-empty</validate>
                 </field>
+                <field id="card_save_enabled" translate="label" type="select" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable credit card saving</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
                 <field id="send_invoice_email" translate="label" type="select" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Send new invoice email to customer</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>

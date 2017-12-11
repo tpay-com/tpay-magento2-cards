@@ -67,16 +67,17 @@ class TpayCardsConfigProvider implements ConfigProviderInterface
     public function getConfig()
     {
         $tpay = $this->getPaymentMethodInstance();
-        $customerTokens = $this->tokensService->getCustomerTokens($tpay->getCheckoutCustomerId());
         $customerTokensData = [];
-        foreach ($customerTokens as $key => $value) {
-            $customerTokensData[] = [
-                'cardShortCode' => $value['cardShortCode'],
-                'id'            => $value['tokenId'],
-                'vendor'        => $value['vendor'],
-            ];
+        if ($tpay->getCardSaveEnabled()) {
+            $customerTokens = $this->tokensService->getCustomerTokens($tpay->getCheckoutCustomerId());
+            foreach ($customerTokens as $key => $value) {
+                $customerTokensData[] = [
+                    'cardShortCode' => $value['cardShortCode'],
+                    'id'            => $value['tokenId'],
+                    'vendor'        => $value['vendor'],
+                ];
+            }
         }
-
         $config = [
             'tpaycards' => [
                 'payment' => [
@@ -88,6 +89,7 @@ class TpayCardsConfigProvider implements ConfigProviderInterface
                     'redirectUrl'        => $tpay->getPaymentRedirectUrl(),
                     'isCustomerLoggedIn' => $tpay->isCustomerLoggedIn(),
                     'customerTokens'     => $customerTokensData,
+                    'isSavingEnabled'    => $tpay->getCardSaveEnabled(),
                 ],
             ],
         ];

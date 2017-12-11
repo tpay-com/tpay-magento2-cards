@@ -382,4 +382,13 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
         $customerSession = $objectManager->get('Magento\Customer\Model\Session');
         return $customerSession->getCustomerId();
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getCardSaveEnabled()
+    {
+        return (bool)$this->getConfigData('card_save_enabled');
+    }
+
 }

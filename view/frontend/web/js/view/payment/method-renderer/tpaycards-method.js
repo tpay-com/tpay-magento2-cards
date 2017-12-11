@@ -62,7 +62,8 @@ define(
                 return $.extend(true, parent, {'additional_data': paymentData});
             },
             showSaveBox: function () {
-                if (window.checkoutConfig.tpaycards.payment.isCustomerLoggedIn) {
+                if (window.checkoutConfig.tpaycards.payment.isCustomerLoggedIn
+                    && window.checkoutConfig.tpaycards.payment.isSavingEnabled) {
                     $('.amPmCheckbox').css('display', 'block');
                 }
             },

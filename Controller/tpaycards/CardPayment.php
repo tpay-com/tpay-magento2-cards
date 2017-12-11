@@ -107,7 +107,9 @@ class CardPayment extends Action
             $this->tpayService->setOrderStatePendingPayment($orderId);
             $additionalPaymentInformation = $paymentData['additional_information'];
 
-            if (isset($additionalPaymentInformation['card_id']) && $additionalPaymentInformation['card_id'] !== false) {
+            if (isset($additionalPaymentInformation['card_id']) && $additionalPaymentInformation['card_id'] !== false
+                && $this->tpay->getCardSaveEnabled()
+            ) {
                 $cardId = (int)$additionalPaymentInformation['card_id'];
                 return $this->processSavedCardPayment($orderId, $cardId);
             } else {
@@ -191,9 +193,16 @@ class CardPayment extends Action
 
     private function processNewCardPayment($orderId, $additionalPaymentInformation)
     {
+        $saveCard = isset($additionalPaymentInformation['card_save']) && $this->tpay->getCardSaveEnabled() ?
+            (bool)$additionalPaymentInformation['card_save'] : false;
         $paymentCardFactory = (new ApiProvider($this->tpay,
             $this->paymentCardFactory))->getTpayPaymentCardFactory();
-        $result = $this->createNewCardPayment($orderId, $additionalPaymentInformation);
+        $localData = $this->tpay->getTpayFormData($orderId);
+        try {
+            $result = $this->createNewCardPayment($orderId, $additionalPaymentInformation, $saveCard);
+        } catch (TException $e) {
+            return $this->trySaleAgain($localData, $orderId, $saveCard);
+        }
         if (isset($result[ResponseFields::URL3DS])) {
             $url3ds = $result[ResponseFields::URL3DS];
             $this->tpayService->addCommentToHistory($orderId, '3DS Transaction link ' . $url3ds);
@@ -202,8 +211,6 @@ class CardPayment extends Action
             return $this->_redirect($url3ds);
 
         } else {
-            $localData = $this->tpay->getTpayFormData($orderId);
-
             if (isset($result[ResponseFields::STATUS]) && (int)$result[ResponseFields::STATUS] === 'correct') {
                 $paymentCardFactory->validateNon3dsSign($result['sign'], isset($result['test_mode']) ? '1' : '',
                     $result['sale_auth'], '', $result['card'], $localData['kwota'], $result['date'],
@@ -216,12 +223,9 @@ class CardPayment extends Action
                     ->setCustomerToken($this->tpay->getCustomerId($orderId), $result['cli_auth'], $result['card'],
                         $additionalPaymentInformation['card_vendor']);
             }
-
-            if ((int)$result[ResponseFields::RESULT] === 1 && $result[ResponseFields::STATUS] === 'correct') {
-                return $this->_redirect(static::SUCCESS_PATH);
-            } else {
-                $this->trySaleAgain($localData, $orderId, (bool)$additionalPaymentInformation['card_save']);
-            }
+            return (int)$result[ResponseFields::RESULT] === 1 && $result[ResponseFields::STATUS] === 'correct' ?
+                $this->_redirect(static::SUCCESS_PATH) :
+                $this->trySaleAgain($localData, $orderId, $saveCard);
         }
     }
 
@@ -230,21 +234,18 @@ class CardPayment extends Action
      *
      * @param int $orderId
      * @param array $additionalPaymentInformation
-     *
+     * @param $saveCard
      * @return array
      */
-    private function createNewCardPayment($orderId, array $additionalPaymentInformation)
+    private function createNewCardPayment($orderId, array $additionalPaymentInformation, $saveCard)
     {
-        $oneTimer = isset($additionalPaymentInformation['card_save']) ?
-            !(bool)$additionalPaymentInformation['card_save'] : true;
-
         $data = $this->tpay->getTpayFormData($orderId);
         $cardData = str_replace(' ', '+', $additionalPaymentInformation['card_data']);
         unset($additionalPaymentInformation['card_data']);
         $data = array_merge($data, $additionalPaymentInformation);
 
         return $this->apiFactory->secureSale($data['nazwisko'], $data['email'], $data['opis'], $data['kwota'],
-            $cardData, $data['currency'], $data['crc'], $oneTimer, $data['jezyk'], true, $data['pow_url'],
+            $cardData, $data['currency'], $data['crc'], !$saveCard, $data['jezyk'], true, $data['pow_url'],
             $data['pow_url_blad']
         );
     }

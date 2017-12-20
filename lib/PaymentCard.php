@@ -151,28 +151,25 @@ class PaymentCard
      * Check cURL request from tpaycom server after payment.
      * This method check server ip, required fields and md5 checksum sent by payment server.
      * Display information to prevent sending repeated notifications.
-     *
+     * @param $params
      * @return mixed
-     *
-     * @throws TException
+     * @throws \Exception
      */
-    public function handleNotification()
+    public function handleNotification($params)
     {
 
-        $notificationType = Util::post('type', static::STRING);
+        $notificationType = Util::post('type', static::STRING, $params);
         if ($notificationType === 'sale') {
-            $response = Validate::getResponse(Validate::PAYMENT_TYPE_CARD);
+            $response = Validate::getResponse(Validate::PAYMENT_TYPE_CARD, $params);
         } elseif ($notificationType === 'deregister') {
-            $response = Validate::getResponse(Validate::CARD_DEREGISTER);
+            $response = Validate::getResponse(Validate::CARD_DEREGISTER, $params);
         } else {
-            throw new TException('Unknown notification type');
+            throw new \Exception('Unknown notification type');
         }
 
         if ($this->validateServerIP === true && $this->checkServer() === false) {
-            throw new TException('Request is not from secure server');
+            throw new \Exception('Request is not from secure server');
         }
-
-        echo json_encode(array(static::RESULT => '1'));
 
         if ($notificationType === 'sale' && $response[ResponseFields::STATUS] === 'correct') {
 
@@ -198,7 +195,7 @@ class PaymentCard
         } elseif ($notificationType === 'deregister') {
             return $response;
         } else {
-            throw new TException('Incorrect payment');
+            throw new \Exception('Incorrect payment');
         }
     }
 
@@ -300,7 +297,7 @@ class PaymentCard
      * @param string $currency
      *
      * @param string $cliAuth
-     * @throws TException
+     * @throws \Exception
      */
     public function validateSign(
         $sign,
@@ -316,7 +313,7 @@ class PaymentCard
         if ($sign !== hash($this->hashAlg, 'sale' . $testMode . $saleAuth . $orderId . $cliAuth . $card .
                 $currency . $amount . $saleDate . 'correct' . $this->code)
         ) {
-            throw new TException('Card payment - invalid checksum');
+            throw new \Exception('Card payment - invalid checksum');
         }
     }
 
@@ -324,7 +321,7 @@ class PaymentCard
     {
         if ($sign !== hash($this->hashAlg, 'deregister' . $testMode . $cliAuth . $date . $this->code)
         ) {
-            throw new TException('Card deregister - invalid checksum');
+            throw new \Exception('Card deregister - invalid checksum');
         }
     }
 
@@ -342,7 +339,7 @@ class PaymentCard
      * @param string $saleDate
      * @param string $currency
      *
-     * @throws TException
+     * @throws \Exception
      */
     public function validateNon3dsSign(
         $sign,
@@ -357,7 +354,7 @@ class PaymentCard
         if ($sign !== hash($this->hashAlg, $testMode . $saleAuth . $orderId . $card .
                 $currency . $amount . $saleDate . 'correct' . $this->code)
         ) {
-            throw new TException('Card payment - invalid checksum');
+            throw new \Exception('Card payment - invalid checksum');
         }
     }
 }

@@ -27,15 +27,6 @@ interface TpayCardsInterface
 
     const CARD_VENDOR = 'card_vendor';
 
-    const SUPPORTED_VENDORS = [
-        'visa',
-        'jcb',
-        'diners',
-        'maestro',
-        'amex',
-        'master',
-    ];
-
     /**
      * Return data for form
      *

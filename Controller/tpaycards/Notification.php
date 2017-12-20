@@ -101,13 +101,14 @@ class Notification extends Action
     {
         try {
             $this->paymentCards = (new ApiProvider($this->tpay, $this->paymentCardFactory))->getTpayPaymentCardFactory();
-            $validParams = $this->paymentCards->handleNotification();
+            $params = $this->getRequest()->getParams();
+            $validParams = $this->paymentCards->handleNotification($params);
             isset($validParams['type']) && $validParams['type'] === 'deregister' ?
                 $this->deregisterCard($validParams) : $this->checkPaymentNotification($validParams);
             return $this
                 ->getResponse()
                 ->setStatusCode(Http::STATUS_CODE_200)
-                ->setContent('');
+                ->setContent(json_encode(array('result' => '1')));
         } catch (\Exception $e) {
             return false;
         }
@@ -115,7 +116,6 @@ class Notification extends Action
 
     private function deregisterCard($validParams)
     {
-        $this->paymentCards->checkServer();
         $this->paymentCards->validateDeregisterSign($validParams['sign'], $validParams['cli_auth'],
             $validParams['date'], isset($validParams['test_mode'])? $validParams['test_mode'] : '');
         (new TpayTokensService($this->modelContext, $this->registry))

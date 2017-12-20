@@ -10,7 +10,7 @@ namespace tpaycom\magento2cards\lib;
 
 class CurrencyISOCodes
 {
-    const ISO_CURRENCY_CODES = array(
+    public $ISO_CURRENCY_CODES = array(
         784 => 'AED',
         41  => 'AMD',
         532 => 'ANG',

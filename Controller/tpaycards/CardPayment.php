@@ -16,7 +16,6 @@ use Magento\Framework\Model\Context as ModelContext;
 use tpaycom\magento2cards\Api\TpayCardsInterface;
 use tpaycom\magento2cards\lib\PaymentCardFactory;
 use tpaycom\magento2cards\lib\ResponseFields;
-use tpaycom\magento2cards\lib\TException;
 use tpaycom\magento2cards\lib\Validate;
 use tpaycom\magento2cards\Model\ApiProvider;
 use tpaycom\magento2cards\Service\TpayService;
@@ -200,7 +199,7 @@ class CardPayment extends Action
         $localData = $this->tpay->getTpayFormData($orderId);
         try {
             $result = $this->createNewCardPayment($orderId, $additionalPaymentInformation, $saveCard);
-        } catch (TException $e) {
+        } catch (\Exception $e) {
             return $this->trySaleAgain($localData, $orderId, $saveCard);
         }
         if (isset($result[ResponseFields::URL3DS])) {

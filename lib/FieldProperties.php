@@ -16,10 +16,11 @@ namespace tpaycom\magento2cards\lib;
  */
 class FieldProperties
 {
-    const REQUIRED = 'required';
-    const TYPE = 'type';
+    const REQ        = 'required';
+    const TYPE       = 'type';
     const VALIDATION = 'validation';
-    const OPTIONS = 'options';
+    const OPTIONS    = 'options';
+    const REQUIRED = 'required';
     const STRING = 'string';
     const FLOAT = 'float';
     const INT = 'int';

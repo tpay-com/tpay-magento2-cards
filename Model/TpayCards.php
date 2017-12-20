@@ -75,6 +75,15 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
      */
     protected $escaper;
 
+    private $supportedVendors = [
+        'visa',
+        'jcb',
+        'diners',
+        'maestro',
+        'amex',
+        'master',
+    ];
+
     /**
      * {@inheritdoc}
      *
@@ -259,7 +268,7 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
         $info->setAdditionalInformation(
             static::CARD_VENDOR,
             isset($additionalData[static::CARD_VENDOR])
-            && in_array($additionalData[static::CARD_VENDOR], static::SUPPORTED_VENDORS) ?
+            && in_array($additionalData[static::CARD_VENDOR], $this->supportedVendors) ?
                 $additionalData[static::CARD_VENDOR] : 'undefined'
         );
         $info->setAdditionalInformation(

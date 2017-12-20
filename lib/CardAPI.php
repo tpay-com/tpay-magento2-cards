@@ -27,7 +27,7 @@ class CardAPI
      * @param string $verificationCode verification code
      * @param string $hashAlg hash algorithm
      *
-     * @throws TException
+     * @throws \Exception
      */
 
     const METHOD = 'method';
@@ -143,9 +143,10 @@ class CardAPI
      * @param string|null $saledata encrypted credit card data
      * @param string $lang
      *
+     * @param bool $enablePowUrl
+     * @param string $powUrl
+     * @param string $powUrlBlad
      * @return bool|mixed
-     *
-     * @throws TException
      */
     private function registerSaleBase(
         $clientName, $clientEmail, $saleDescription, $amount, $currency = '985', $orderID = null,
@@ -274,7 +275,7 @@ class CardAPI
      *
      * @return bool|mixed
      *
-     * @throws TException
+     * @throws \Exception
      */
     public function secureSale(
         $clientName,
@@ -292,7 +293,7 @@ class CardAPI
     )
     {
         if (!is_string($carddata) || strlen($carddata) === 0) {
-            throw new TException('Card data are not set');
+            throw new \Exception('Card data are not set');
         }
 
         return $this->registerSaleBase(
@@ -329,7 +330,7 @@ class CardAPI
      *
      * @return bool|mixed
      *
-     * @throws TException
+     * @throws \Exception
      */
     public function presale($clientAuthCode, $saleDescription, $amount, $currency = '985',
                             $orderID = null, $lang = 'pl')
@@ -361,7 +362,7 @@ class CardAPI
      *
      * @return array    parameters for sale request
      *
-     * @throws TException
+     * @throws \Exception
      */
     private function saleValidateAndPrepareParams($clientAuthCode, $saleDescription,
                                                   $amount, $currency, $orderID, $lang, $method, $errors = array())
@@ -392,7 +393,7 @@ class CardAPI
         }
 
         if (count($errors) > 0) {
-            throw new TException(sprintf('%s', implode(' ', $errors)));
+            throw new \Exception(sprintf('%s', implode(' ', $errors)));
         }
 
         $amount = number_format(str_replace(array(',', ' '), array('.', ''), $amount), 2, '.', '');
@@ -432,7 +433,7 @@ class CardAPI
      *
      * @return bool|mixed
      *
-     * @throws TException
+     * @throws \Exception
      */
     public function completeSale(
         $clientAuthCode,
@@ -503,7 +504,7 @@ class CardAPI
      *
      * @return bool|mixed
      *
-     * @throws TException
+     * @throws \Exception
      */
     public function refund($saleAuthCode, $refundDesc, $amount = null, $lang = 'pl')
     {
@@ -536,7 +537,7 @@ class CardAPI
      *
      * @return bool|mixed
      *
-     * @throws TException
+     * @throws \Exception
      */
     public function deregisterClient($clientAuthCode)
     {
@@ -551,7 +552,7 @@ class CardAPI
         }
 
         if (count($errors) > 0) {
-            throw new TException(sprintf('%s', implode(' ', $errors)));
+            throw new \Exception(sprintf('%s', implode(' ', $errors)));
         }
 
         $params[static::METHOD] = 'deregister';

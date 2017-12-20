@@ -34,27 +34,27 @@ class Validate
     public static function validateCardCurrency($currency)
     {
         if (strlen($currency) !== 3) {
-            throw new TException('Currency is invalid.');
+            throw new \Exception('Currency is invalid.');
         }
-
+        $currencies = (new CurrencyISOCodes)->ISO_CURRENCY_CODES;
         switch (gettype($currency)) {
             case 'string':
-                if (in_array($currency, CurrencyISOCodes::ISO_CURRENCY_CODES)) {
-                    $currency = array_search($currency, CurrencyISOCodes::ISO_CURRENCY_CODES);
-                } elseif (array_key_exists((int)$currency, CurrencyISOCodes::ISO_CURRENCY_CODES)) {
+                if (in_array($currency, $currencies)) {
+                    $currency = array_search($currency, $currencies);
+                } elseif (array_key_exists((int)$currency, $currencies)) {
                     $currency = (int)$currency;
                 } else {
-                    throw new TException('Currency is not supported.');
+                    throw new \Exception('Currency is not supported.');
                 }
 
                 break;
             case 'integer':
-                if (!array_key_exists($currency, CurrencyISOCodes::ISO_CURRENCY_CODES)) {
-                    throw new TException('Currency is not supported.');
+                if (!array_key_exists($currency, $currencies)) {
+                    throw new \Exception('Currency is not supported.');
                 }
                 break;
             default:
-                throw new TException('Currency variable type not supported.');
+                throw new \Exception('Currency variable type not supported.');
         }
         return $currency;
 
@@ -67,7 +67,7 @@ class Validate
      * @param mixed  $value     field value
      * @param string $name      field name
      *
-     * @throws TException
+     * @throws \Exception
      */
     public static function fieldLengthValidation($validator, $value, $name)
     {
@@ -89,10 +89,11 @@ class Validate
      *
      * @param string $paymentType
      *
+     * @param $params
      * @return array
-     * @throws TException
+     * @throws \Exception
      */
-    public static function getResponse($paymentType)
+    public static function getResponse($paymentType, $params)
     {
         $ready = array();
         $missed = array();
@@ -105,16 +106,16 @@ class Validate
                 static::$responseFields = DeregisterResponseFieldsSettings::$fields;
                 break;
             default:
-                throw new TException(sprintf('unknown payment type %s', $paymentType));
+                throw new \Exception(sprintf('unknown payment type %s', $paymentType));
         }
 
         foreach (static::$responseFields as $fieldName => $field) {
-            if (Util::post($fieldName, FieldProperties::STRING) === false) {
+            if (Util::post($fieldName, FieldProperties::STRING, $params) === false) {
                 if ($field[FieldProperties::REQUIRED] === true) {
                     $missed[] = $fieldName;
                 }
             } else {
-                $val = Util::post($fieldName, FieldProperties::STRING);
+                $val = Util::post($fieldName, FieldProperties::STRING, $params);
                 switch ($field[FieldProperties::TYPE]) {
                     case FieldProperties::STRING:
                         $val = (string)$val;
@@ -126,14 +127,14 @@ class Validate
                         $val = (float)$val;
                         break;
                     default:
-                        throw new TException(sprintf('unknown field type in getResponse - field name= %s', $fieldName));
+                        throw new \Exception(sprintf('unknown field type in getResponse - field name= %s', $fieldName));
                 }
                 $ready[$fieldName] = $val;
             }
         }
 
         if (count($missed) > 0) {
-            throw new TException(sprintf('Missing fields in tpaycards response: %s', implode(',', $missed)));
+            throw new \Exception(sprintf('Missing fields in tpaycards response: %s', implode(',', $missed)));
         }
 
         foreach ($ready as $fieldName => $fieldVal) {
@@ -149,15 +150,15 @@ class Validate
      * @param mixed  $value variable to check
      * @param string $name  field name
      *
-     * @throws TException
+     * @throws \Exception
      */
     private static function validateUint($value, $name)
     {
         if (!is_int($value)) {
-            throw new TException(sprintf('Field "%s" must be an integer', $name));
+            throw new \Exception(sprintf('Field "%s" must be an integer', $name));
         } else {
             if ($value < 0) {
-                throw new TException(sprintf('Field "%s" must be higher than zero', $name));
+                throw new \Exception(sprintf('Field "%s" must be higher than zero', $name));
             }
         }
     }
@@ -169,17 +170,17 @@ class Validate
      *
      * @return bool
      *
-     * @throws TException
+     * @throws \Exception
      */
     public static function validateOne($name, $value)
     {
         $requestFields = static::$responseFields;
 
         if (!is_string($name)) {
-            throw new TException('Invalid field name');
+            throw new \Exception('Invalid field name');
         }
         if (!array_key_exists($name, $requestFields)) {
-            throw new TException('Field with this name is not supported');
+            throw new \Exception('Field with this name is not supported');
         }
 
         $fieldConfig = $requestFields[$name];
@@ -201,7 +202,7 @@ class Validate
      * @param mixed  $value field value
      * @param string $name  field name
      *
-     * @throws TException
+     * @throws \Exception
      */
     public static function fieldValidation($value, $name)
     {
@@ -235,15 +236,15 @@ class Validate
      * @param mixed  $value variable to check
      * @param string $name  field name
      *
-     * @throws TException
+     * @throws \Exception
      */
     private static function validateFloat($value, $name)
     {
         if (!is_float($value) && !is_int($value)) {
-            throw new TException(sprintf('Field "%s" must be a float|int number', $name));
+            throw new \Exception(sprintf('Field "%s" must be a float|int number', $name));
         } else {
             if ($value < 0) {
-                throw new TException(sprintf('Field "%s" must be higher than zero', $name));
+                throw new \Exception(sprintf('Field "%s" must be higher than zero', $name));
             }
         }
     }
@@ -254,12 +255,12 @@ class Validate
      * @param mixed  $value variable to check
      * @param string $name  field name
      *
-     * @throws TException
+     * @throws \Exception
      */
     private static function validateString($value, $name)
     {
         if (!is_string($value)) {
-            throw new TException(sprintf('Field "%s" must be a string', $name));
+            throw new \Exception(sprintf('Field "%s" must be a string', $name));
         }
     }
 
@@ -269,17 +270,17 @@ class Validate
      * @param mixed  $value variable to check
      * @param string $name  field name
      *
-     * @throws TException
+     * @throws \Exception
      */
     private static function validateEmailList($value, $name)
     {
         if (!is_string($value)) {
-            throw new TException(sprintf('Field "%s" must be a string', $name));
+            throw new \Exception(sprintf('Field "%s" must be a string', $name));
         }
         $emails = explode(',', $value);
         foreach ($emails as $email) {
             if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
-                throw new TException(
+                throw new \Exception(
                     sprintf('Field "%s" contains invalid email address', $name)
                 );
             }
@@ -293,12 +294,12 @@ class Validate
      * @param array  $options available options
      * @param string $name    field name
      *
-     * @throws TException
+     * @throws \Exception
      */
     private static function validateOptions($value, $options, $name)
     {
         if (!in_array($value, $options, true)) {
-            throw new TException(sprintf('Field "%s" has unsupported value', $name));
+            throw new \Exception(sprintf('Field "%s" has unsupported value', $name));
         }
     }
 
@@ -309,12 +310,12 @@ class Validate
      * @param int    $max   max lenght
      * @param string $name  field name
      *
-     * @throws TException
+     * @throws \Exception
      */
     private static function validateMaxLenght($value, $max, $name)
     {
         if (strlen($value) > $max) {
-            throw new TException(
+            throw new \Exception(
                 sprintf('Value of field "%s" is too long. Max %d characters', $name, $max)
             );
         }
@@ -327,12 +328,12 @@ class Validate
      * @param int    $min   min length
      * @param string $name  field name
      *
-     * @throws TException
+     * @throws \Exception
      */
     private static function validateMinLength($value, $min, $name)
     {
         if (strlen($value) < $min) {
-            throw new TException(
+            throw new \Exception(
                 sprintf('Value of field "%s" is too short. Min %d characters', $name, $min)
             );
         }
@@ -343,12 +344,12 @@ class Validate
      *
      * @param int $merchantId
      *
-     * @throws TException
+     * @throws \Exception
      */
     public static function validateMerchantId($merchantId)
     {
         if (!is_int($merchantId) || $merchantId <= 0) {
-            throw new TException('Invalid merchantId');
+            throw new \Exception('Invalid merchantId');
         }
     }
 
@@ -357,12 +358,12 @@ class Validate
      *
      * @param string $merchantSecret
      *
-     * @throws TException
+     * @throws \Exception
      */
     public static function validateMerchantSecret($merchantSecret)
     {
         if (!is_string($merchantSecret) || strlen($merchantSecret) === 0) {
-            throw new TException('Invalid secret code');
+            throw new \Exception('Invalid secret code');
         }
     }
 
@@ -372,7 +373,7 @@ class Validate
      * @param $field array
      * @param $val mixed
      * @return mixed
-     * @throws TException
+     * @throws \Exception
      */
     private static function getFieldValue($field, $val)
     {
@@ -387,7 +388,7 @@ class Validate
                 $val = (float)$val;
                 break;
             default:
-                throw new TException(sprintf('unknown field type in getResponse - field name= %s', $field));
+                throw new \Exception(sprintf('unknown field type in getResponse - field name= %s', $field));
         }
 
         return $val;
@@ -397,13 +398,13 @@ class Validate
  *
  * @param string $language
  *
- * @throws TException
+ * @throws \Exception
  * @return string
  */
     public static function validateCardLanguage($language)
     {
         if (!is_string($language)) {
-            throw new TException('Invalid language value type.');
+            throw new \Exception('Invalid language value type.');
         }
         if (in_array($language, static::$cardPaymentLanguages)) {
             $language = array_search($language, static::$cardPaymentLanguages);
@@ -418,12 +419,12 @@ class Validate
      *
      * @param string $cardApiKey
      *
-     * @throws TException
+     * @throws \Exception
      */
     public static function validateCardApiKey($cardApiKey)
     {
         if (!is_string($cardApiKey) || strlen($cardApiKey) === 0) {
-            throw new TException('Invalid card API key');
+            throw new \Exception('Invalid card API key');
         }
     }
 
@@ -432,12 +433,12 @@ class Validate
      *
      * @param string $cardApiPassword
      *
-     * @throws TException
+     * @throws \Exception
      */
     public static function validateCardApiPassword($cardApiPassword)
     {
         if (!is_string($cardApiPassword) || strlen($cardApiPassword) === 0) {
-            throw new TException('Invalid card API pass');
+            throw new \Exception('Invalid card API pass');
         }
     }
 
@@ -446,24 +447,24 @@ class Validate
      *
      * @param string $cardCode
      *
-     * @throws TException
+     * @throws \Exception
      */
     public static function validateCardCode($cardCode)
     {
         if (!is_string($cardCode) || strlen($cardCode) === 0 || strlen($cardCode) > 40) {
-            throw new TException('Invalid card code');
+            throw new \Exception('Invalid card code');
         }
     }
 
     /**
      * Validate card hash algorithm
      * @param string $hashAlg
-     * @throws TException
+     * @throws \Exception
      */
     public static function validateCardHashAlg($hashAlg)
     {
         if (!in_array($hashAlg, array('sha1', 'sha256', 'sha512', 'ripemd160', 'ripemd320', 'md5'))) {
-            throw new TException('Invalid hash algorithm');
+            throw new \Exception('Invalid hash algorithm');
         }
     }
 
@@ -472,12 +473,12 @@ class Validate
      *
      * @param string $keyRSA
      *
-     * @throws TException
+     * @throws \Exception
      */
     public static function validateCardRSAKey($keyRSA)
     {
         if (!is_string($keyRSA) || strlen($keyRSA) === 0) {
-            throw new TException('Invalid card RSA key');
+            throw new \Exception('Invalid card RSA key');
         }
     }
 

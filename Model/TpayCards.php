@@ -180,6 +180,7 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
             'pow_url'      => $this->urlBuilder->getUrl('magento2cards/tpaycards/success'),
             'jezyk'        => $language,
             'currency'     => $this->getISOCurrencyCode($order->getOrderCurrencyCode()),
+            'module'       => 'Magento ' . $this->getMagentoVersion(),
         ];
     }
 
@@ -398,6 +399,13 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
     public function getCardSaveEnabled()
     {
         return (bool)$this->getConfigData('card_save_enabled');
+    }
+
+    private function getMagentoVersion()
+    {
+        $objectManager = ObjectManager::getInstance();
+        $productMetadata = $objectManager->get('Magento\Framework\App\ProductMetadataInterface');
+        return $productMetadata->getVersion();
     }
 
 }

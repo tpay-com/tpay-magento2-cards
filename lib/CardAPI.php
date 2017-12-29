@@ -99,7 +99,10 @@ class CardAPI
      * @param string|null $orderID order id
      * @param bool $onetimer
      * @param string $lang
-     *
+     * @param bool $enablePowUrl
+     * @param string $powUrl
+     * @param string $powUrlBlad
+     * @param string $module
      * @return bool|mixed
      */
     public function registerSale(
@@ -111,7 +114,10 @@ class CardAPI
         $orderID = null,
         $onetimer = true,
         $lang = 'pl',
-        $powUrl = true
+        $enablePowUrl = true,
+        $powUrl = '',
+        $powUrlBlad = '',
+        $module = null
     )
     {
         return $this->registerSaleBase(
@@ -125,7 +131,10 @@ class CardAPI
             false,
             null,
             $lang,
-            $powUrl
+            $enablePowUrl,
+            $powUrl,
+            $powUrlBlad,
+            $module
         );
     }
 
@@ -146,12 +155,13 @@ class CardAPI
      * @param bool $enablePowUrl
      * @param string $powUrl
      * @param string $powUrlBlad
+     * @param string $module
      * @return bool|mixed
      */
     private function registerSaleBase(
         $clientName, $clientEmail, $saleDescription, $amount, $currency = '985', $orderID = null,
         $onetimer = true, $direct = false, $saledata = null, $lang = 'pl', $enablePowUrl = false, $powUrl = '',
-        $powUrlBlad = ''
+        $powUrlBlad = '', $module = null
     )
     {
         $amount = number_format(str_replace(array(',', ' '), array('.', ''), $amount), 2, '.', '');
@@ -174,7 +184,9 @@ class CardAPI
         $params[static::APIPASS] = $this->apiPass;
 
         $params = array_merge($params, $this->checkReturnUrls($powUrl, $powUrlBlad));
-
+        if (!is_null($module) && strlen($module) <= 32) {
+            $params['module'] = $module;
+        }
         return $this->postRequest($this->apiURL . $this->apiKey, $params);
     }
 
@@ -273,8 +285,11 @@ class CardAPI
      * @param bool $onetimer
      * @param string $lang
      *
+     * @param bool $enablePowUrl
+     * @param string $powUrl
+     * @param string $powUrlBlad
+     * @param string $module
      * @return bool|mixed
-     *
      * @throws \Exception
      */
     public function secureSale(
@@ -289,7 +304,8 @@ class CardAPI
         $lang = 'pl',
         $enablePowUrl = true,
         $powUrl = '',
-        $powUrlBlad = ''
+        $powUrlBlad = '',
+        $module = null
     )
     {
         if (!is_string($carddata) || strlen($carddata) === 0) {
@@ -309,7 +325,8 @@ class CardAPI
             $lang,
             $enablePowUrl,
             $powUrl,
-            $powUrlBlad
+            $powUrlBlad,
+            $module
         );
     }
 
@@ -360,12 +377,12 @@ class CardAPI
      * @param string $method sale method
      * @param array $errors validation errors
      *
-     * @return array    parameters for sale request
+     * @return array parameters for sale request
      *
      * @throws \Exception
      */
-    private function saleValidateAndPrepareParams($clientAuthCode, $saleDescription,
-                                                  $amount, $currency, $orderID, $lang, $method, $errors = array())
+    private function saleValidateAndPrepareParams($clientAuthCode, $saleDescription, $amount, $currency, $orderID,
+        $lang, $method, $errors = array())
     {
 
         if (!is_string($clientAuthCode) || strlen($clientAuthCode) === 0) {
@@ -431,9 +448,8 @@ class CardAPI
      * @param string|null $orderID order id
      * @param string $lang language
      *
+     * @param string $module
      * @return bool|mixed
-     *
-     * @throws \Exception
      */
     public function completeSale(
         $clientAuthCode,
@@ -441,7 +457,8 @@ class CardAPI
         $amount,
         $currency = '985',
         $orderID = null,
-        $lang = 'pl'
+        $lang = 'pl',
+        $module = null
     )
     {
         $params = $this->saleValidateAndPrepareParams($clientAuthCode, $saleDescription,
@@ -450,7 +467,7 @@ class CardAPI
 
         if (isset($response['result']) && (int)$response['result'] === 1) {
             $saleAuthCode = $response[static::SALEAUTH];
-            return $this->sale($clientAuthCode, $saleAuthCode);
+            return $this->sale($clientAuthCode, $saleAuthCode, $module);
 
         }
         return $response;
@@ -465,9 +482,10 @@ class CardAPI
      * @param string $clientAuthCode client auth code
      * @param string $saleAuthCode sale auth code
      *
+     * @param string $module
      * @return bool|mixed
      */
-    public function sale($clientAuthCode, $saleAuthCode)
+    public function sale($clientAuthCode, $saleAuthCode, $module = null)
     {
         if (strlen($clientAuthCode) != 40) {
             return false;
@@ -484,7 +502,9 @@ class CardAPI
         $params[static::SIGN] = hash($this->hashAlg, static::SALE .
             $clientAuthCode . $saleAuthCode . $this->verificationCode);
         $params[static::APIPASS] = $this->apiPass;
-
+        if (!is_null($module) && strlen($module) <=32) {
+            $params['module'] = $module;
+        }
         return $this->postRequest($this->apiURL . $this->apiKey, $params);
     }
 

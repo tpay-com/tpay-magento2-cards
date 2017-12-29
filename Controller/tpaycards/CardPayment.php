@@ -136,7 +136,7 @@ class CardPayment extends Action
         if ($isValid) {
             try {
                 $paymentResult = $this->apiFactory->completeSale($token, $data['opis'], $data['kwota'],
-                    $data['currency'], $data['crc'], $data['jezyk']);
+                    $data['currency'], $data['crc'], $data['jezyk'], $data['module']);
                 if ((int)$paymentResult['result'] === 1
                     && isset($paymentResult['status'])
                     && $paymentResult['status'] === 'correct') {
@@ -170,7 +170,8 @@ class CardPayment extends Action
     private function trySaleAgain($data, $orderId, $saveCard = false)
     {
         $result = $this->apiFactory->registerSale($data['nazwisko'], $data['email'], $data['opis'], $data['kwota'],
-            $data['currency'], $data['crc'], !$saveCard, $data['jezyk'], true);
+            $data['currency'], $data['crc'], !$saveCard, $data['jezyk'], true, $data['pow_url'], $data['pow_url_blad'],
+            $data['module']);
         if (isset($result['sale_auth'])) {
             $url = 'https://secure.tpay.com/cards?sale_auth=' . $result['sale_auth'];
             $this->tpayService->addCommentToHistory($orderId,
@@ -245,7 +246,7 @@ class CardPayment extends Action
 
         return $this->apiFactory->secureSale($data['nazwisko'], $data['email'], $data['opis'], $data['kwota'],
             $cardData, $data['currency'], $data['crc'], !$saveCard, $data['jezyk'], true, $data['pow_url'],
-            $data['pow_url_blad']
+            $data['pow_url_blad'], $data['module']
         );
     }
 

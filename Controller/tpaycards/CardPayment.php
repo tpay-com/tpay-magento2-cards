@@ -223,7 +223,8 @@ class CardPayment extends Action
                     ->setCustomerToken($this->tpay->getCustomerId($orderId), $result['cli_auth'], $result['card'],
                         $additionalPaymentInformation['card_vendor']);
             }
-            return (int)$result[ResponseFields::RESULT] === 1 && $result[ResponseFields::STATUS] === 'correct' ?
+            return (int)$result[ResponseFields::RESULT] === 1 && isset($result[ResponseFields::STATUS])
+            && $result[ResponseFields::STATUS] === 'correct' ?
                 $this->_redirect(static::SUCCESS_PATH) :
                 $this->trySaleAgain($localData, $orderId, $saveCard);
         }

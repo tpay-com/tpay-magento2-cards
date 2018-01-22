@@ -2,7 +2,7 @@
 
 namespace tpaycom\magento2cards\Controller\tpaycards;
 
-use Magento\Payment\Model\InfoInterface;
+use Magento\Sales\Model\Order\Payment;
 use tpaycom\magento2cards\lib\CardAPI;
 use Magento\Framework\Validator\Exception;
 
@@ -35,7 +35,7 @@ class CardRefunds
     }
 
     /**
-     * @param InfoInterface $payment
+     * @param Payment $payment
      * @param double $amount
      * @return bool
      * @throws Exception
@@ -45,7 +45,8 @@ class CardRefunds
         $tpayApi = new CardAPI($this->apiKey, $this->apiPass, $this->verificationCode, $this->hashType);
         $transactionId = $payment->getParentTransactionId();
 
-        $result = $tpayApi->refund($transactionId, 'Zamówienie ' . $payment->getParentId(), $amount);
+        $result = $tpayApi->refund($transactionId, 'Zwrot do zamówienia ' . $payment->getOrder()->getRealOrderId(),
+            $amount);
 
         if ((int)$result['result'] === 1 && isset($result['status']) && $result['status'] === 'correct') {
             return $result['sale_auth'];

@@ -19,6 +19,7 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Service\InvoiceService;
 use tpaycom\magento2cards\Api\Sales\CardsOrderRepositoryInterface;
 use tpaycom\magento2cards\Api\TpayCardsInterface;
+use tpaycom\magento2cards\lib\CurrencyISOCodes;
 use tpaycom\magento2cards\lib\ResponseFields;
 use Magento\Framework\Event\ManagerInterface as EventManagerInterface;
 use Magento\Sales\Model\Order\Payment\State\CommandInterface;
@@ -144,7 +145,7 @@ class TpayService extends RegisterCaptureNotificationOperation
         if (!isset($validParams[ResponseFields::STATUS]) || $validParams[ResponseFields::STATUS] !== 'correct'
             || ((double)number_format($validParams[ResponseFields::AMOUNT], 2, '.', '') !== $orderAmount)
         ) {
-            $comment = __('Payment has been declined. ') . '</br>' . $transactionDesc;
+            $comment = __('Payment has been declined. ').'</br>'.$transactionDesc;
             $this->addCommentToHistory($orderId, $comment);
         } else {
             if ($order->getState() != Order::STATE_PROCESSING) {
@@ -180,16 +181,17 @@ class TpayService extends RegisterCaptureNotificationOperation
             return false;
         }
         if (isset ($validParams['err_desc'])) {
-            return 'Payment error: ' . $validParams['err_desc'] . ', error code: ' . $validParams['err_code'];
+            return 'Payment error: '.$validParams['err_desc'].', error code: '.$validParams['err_code'];
         }
         $error = null;
         if ($validParams['status'] === 'declined') {
             $error = $validParams['reason'];
         }
 
-        $transactionDesc = (is_null($error)) ? ' ' : ' Reason:  <b>' . $error . '</b>';
+        $transactionDesc = (is_null($error)) ? ' ' : ' Reason:  <b>'.$error.'</b>';
         $transactionDesc .= (isset($validParams[ResponseFields::TEST_MODE])) &&
         (int)$validParams[ResponseFields::TEST_MODE] === 1 ? '<b> TEST </b>' : ' ';
+
         return $transactionDesc;
     }
 
@@ -199,7 +201,8 @@ class TpayService extends RegisterCaptureNotificationOperation
      * @param OrderPaymentInterface $payment
      * @param string|float $amount
      * @param array $validParams
-     * @param bool|int $skipFraudDetection
+     * @param bool $skipFraudDetection
+     * @throws \Exception
      */
     private function registerCaptureNotificationTpay(
         OrderPaymentInterface $payment,
@@ -221,28 +224,28 @@ class TpayService extends RegisterCaptureNotificationOperation
         $order = $payment->getOrder();
         $amount = (double)$amount;
         $invoice = $this->getInvoiceForTransactionId($order, $payment->getTransactionId());
-
+        $orderCurrency = $order->getOrderCurrency()->getCode();
+        if (!in_array($orderCurrency, CurrencyISOCodes::ISO_CURRENCY_CODES)) {
+            throw new \Exception(sprintf('Order currency %s does not exist in Tpay dictionary!', $orderCurrency));
+        }
+        $orderCurrency = array_search($orderCurrency, CurrencyISOCodes::ISO_CURRENCY_CODES);
         // register new capture
-        if (!$invoice) {
-            if ($payment->isSameCurrency() && $payment->isCaptureFinal($amount)) {
-                $invoice = $order->prepareInvoice()->register();
-                $invoice->setOrder($order);
-                $order->addRelatedObject($invoice);
-                $payment->setCreatedInvoice($invoice);
-                $payment->setShouldCloseParentTransaction(true);
-            } else {
-                $payment->setIsFraudDetected(!$skipFraudDetection);
-                $this->updateTotals($payment, ['base_amount_paid_online' => $amount]);
-            }
+        if (!$invoice && $payment->isCaptureFinal($amount) && $orderCurrency === (int)$validParams['currency']) {
+            $invoice = $order->prepareInvoice()->register();
+            $invoice->setOrder($order);
+            $order->addRelatedObject($invoice);
+            $payment->setCreatedInvoice($invoice);
+            $payment->setShouldCloseParentTransaction(true);
+        } else {
+            $payment->setIsFraudDetected(!$skipFraudDetection);
+            $this->updateTotals($payment, ['base_amount_paid_online' => $amount]);
         }
 
-        if (!$payment->getIsTransactionPending()) {
-            if ($invoice && Invoice::STATE_OPEN == $invoice->getState()) {
-                $invoice->setOrder($order);
-                $invoice->pay();
-                $this->updateTotals($payment, ['base_amount_paid_online' => $amount]);
-                $order->addRelatedObject($invoice);
-            }
+        if (!$payment->getIsTransactionPending() && $invoice && Invoice::STATE_OPEN === $invoice->getState()) {
+            $invoice->setOrder($order);
+            $invoice->pay();
+            $this->updateTotals($payment, ['base_amount_paid_online' => $amount]);
+            $order->addRelatedObject($invoice);
         }
 
         $message = $this->stateCommand->execute($payment, $amount, $order);
@@ -255,7 +258,6 @@ class TpayService extends RegisterCaptureNotificationOperation
         );
         $message = $payment->prependMessage($message);
         $payment->addTransactionCommentsToOrder($transaction, $message);
-
     }
 
 }

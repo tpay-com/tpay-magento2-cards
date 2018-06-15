@@ -36,7 +36,7 @@ class Validate
         if (strlen($currency) !== 3) {
             throw new \Exception('Currency is invalid.');
         }
-        $currencies = (new CurrencyISOCodes)->ISO_CURRENCY_CODES;
+        $currencies = CurrencyISOCodes::ISO_CURRENCY_CODES;
         switch (gettype($currency)) {
             case 'string':
                 if (in_array($currency, $currencies)) {

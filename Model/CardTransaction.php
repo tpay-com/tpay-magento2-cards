@@ -63,7 +63,6 @@ class CardTransaction
         $url = "{$this->urlApi}/{$this->apiKey}";
         $transactionData['json'] = 1;
 
-        return (array)json_decode(Curl::doCurlRequest($url, $transactionData));
-
+        return json_decode(Curl::doCurlRequest($url, $transactionData), true);
     }
 }

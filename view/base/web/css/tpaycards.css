@@ -335,7 +335,8 @@ img#saved_icon.visa {
     background-position: 0px center;
 }
 
-img#saved_icon.master {
+img#saved_icon.master,
+img#saved_icon.mastercard {
     background-position: -91px center;
 }
 

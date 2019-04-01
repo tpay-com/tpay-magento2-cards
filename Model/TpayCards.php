@@ -78,10 +78,10 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
     private $supportedVendors = [
         'visa',
         'jcb',
-        'diners',
+        'dinersclub',
         'maestro',
         'amex',
-        'master',
+        'mastercard',
     ];
 
     /**

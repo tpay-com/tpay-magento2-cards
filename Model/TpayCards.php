@@ -164,7 +164,10 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
         $billingAddress = $order->getBillingAddress();
         $amount = number_format($order->getGrandTotal(), 2, '.', '');
         $name = $billingAddress->getData('firstname') . ' ' . $billingAddress->getData('lastname');
-
+        $companyName = $billingAddress->getData('company');
+        if (strlen($name) <= 3 && !empty($companyName) && strlen($companyName) > 3) {
+            $name = $companyName;
+        }
         $om = ObjectManager::getInstance();
         $resolver = $om->get('Magento\Framework\Locale\Resolver');
         $language = Validate::validateCardLanguage($resolver->getLocale());
@@ -185,7 +188,8 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
     }
 
     /**
-     *
+     * @param int $orderId
+     * @return \Magento\Sales\Api\Data\OrderInterface
      */
     protected function getOrder($orderId = null)
     {
@@ -313,7 +317,6 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
             $this->_logger->error(__('Payment refunding error.'));
             throw new Exception(__('Payment refunding error.'));
         }
-
 
         return $this;
     }

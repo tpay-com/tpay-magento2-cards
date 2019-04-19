@@ -25,6 +25,7 @@
                 <can_refund>1</can_refund>
                 <can_void>0</can_void>
                 <can_cancel>1</can_cancel>
+                <order_status>processing</order_status>
             </tpaycom_magento2cards>
         </payment>
     </default>

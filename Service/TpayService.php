@@ -236,6 +236,7 @@ class TpayService extends RegisterCaptureNotificationOperation
             $order->addRelatedObject($invoice);
             $payment->setCreatedInvoice($invoice);
             $payment->setShouldCloseParentTransaction(true);
+            $order->setState(Order::STATE_PROCESSING)->save();
         } else {
             $payment->setIsFraudDetected(!$skipFraudDetection);
             $this->updateTotals($payment, ['base_amount_paid_online' => $amount]);
@@ -247,8 +248,6 @@ class TpayService extends RegisterCaptureNotificationOperation
             $this->updateTotals($payment, ['base_amount_paid_online' => $amount]);
             $order->addRelatedObject($invoice);
         }
-
-        $message = $this->stateCommand->execute($payment, $amount, $order);
         $payment->setTransactionId($validParams[ResponseFields::SALE_AUTH])
             ->setTransactionAdditionalInfo(Transaction::RAW_DETAILS, $validParams);
         $transaction = $payment->addTransaction(
@@ -256,6 +255,7 @@ class TpayService extends RegisterCaptureNotificationOperation
             $invoice,
             true
         );
+        $message = $this->stateCommand->execute($payment, $amount, $order);
         $message = $payment->prependMessage($message);
         $payment->addTransactionCommentsToOrder($transaction, $message);
     }

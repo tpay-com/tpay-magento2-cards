@@ -2,15 +2,12 @@
 /**
  *
  * @category    payment gateway
- * @package     Tpaycom_Magento2.1
+ * @package     Tpaycom_Magento2.3
  * @author      tpay.com
  * @copyright   (https://tpay.com)
  */
 
 namespace tpaycom\magento2cards\Controller;
-
-use \tpaycom\magento2cards\Model\TpayCards;
-
 /**
  * Class CardsTpaycom
  * @package tpaycom\magento2cards\Controller

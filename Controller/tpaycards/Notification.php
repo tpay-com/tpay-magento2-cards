@@ -2,7 +2,7 @@
 /**
  *
  * @category    payment gateway
- * @package     Tpaycom_Magento2.1
+ * @package     Tpaycom_Magento2.3
  * @author      tpay.com
  * @copyright   (https://tpay.com)
  */
@@ -16,19 +16,19 @@ use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\Response\Http;
 use Magento\Framework\HTTP\PhpEnvironment\RemoteAddress;
+use tpaycom\magento2cards\Model\CardTransactionModel;
+use tpaycom\magento2cards\Model\CardTransactionModelFactory;
 use tpaycom\magento2cards\Api\TpayCardsInterface;
-use tpaycom\magento2cards\lib\PaymentCard;
-use tpaycom\magento2cards\lib\PaymentCardFactory;
-use tpaycom\magento2cards\Model\ApiProvider;
 use tpaycom\magento2cards\Service\TpayService;
 use tpaycom\magento2cards\Service\TpayTokensService;
 use Magento\Framework\Model\Context as ModelContext;
 use Magento\Framework\Registry;
+use tpayLibs\src\_class_tpay\Utilities\Util;
 
 /**
  * Class Notification
  *
- * @package tpaycom\magento2cards\Controller\tpaycardscards
+ * @package tpaycom\magento2cards\Controller\tpaycards
  */
 class Notification extends Action implements CsrfAwareActionInterface
 {
@@ -48,9 +48,9 @@ class Notification extends Action implements CsrfAwareActionInterface
     protected $emailNotify = false;
 
     /**
-     * @var PaymentCardFactory
+     * @var CardTransactionModelFactory
      */
-    protected $paymentCardFactory;
+    protected $cardTransactionFactory;
 
     /**
      * @var TpayService
@@ -68,9 +68,9 @@ class Notification extends Action implements CsrfAwareActionInterface
     private $modelContext;
 
     /**
-     * @param PaymentCard $paymentCards
+     * @var CardTransactionModel
      */
-    private $paymentCards;
+    private $cardTransactionModel;
 
     /**
      * {@inheritdoc}
@@ -82,17 +82,27 @@ class Notification extends Action implements CsrfAwareActionInterface
         Context $context,
         RemoteAddress $remoteAddress,
         TpayCardsInterface $tpayModel,
-        PaymentCardFactory $paymentCardFactory,
+        CardTransactionModelFactory $paymentCardFactory,
         TpayService $tpayService,
         ModelContext $modelContext,
         Registry $registry
     ) {
         $this->tpay = $tpayModel;
         $this->remoteAddress = $remoteAddress;
-        $this->paymentCardFactory = $paymentCardFactory;
+        $this->cardTransactionFactory = $paymentCardFactory;
         $this->tpayService = $tpayService;
         $this->modelContext = $modelContext;
         $this->registry = $registry;
+        $this->cardTransactionModel = $this->cardTransactionFactory->create(
+            [
+                'apiPassword' => $this->tpay->getApiPassword(),
+                'apiKey' => $this->tpay->getApiKey(),
+                'verificationCode' => $this->tpay->getVerificationCode(),
+                'keyRsa' => $this->tpay->getRSAKey(),
+                'hashType' => $this->tpay->getHashType(),
+            ]
+        );
+        Util::$loggingEnabled = false;
 
         parent::__construct($context);
     }
@@ -103,46 +113,17 @@ class Notification extends Action implements CsrfAwareActionInterface
     public function execute()
     {
         try {
-            $this->paymentCards = (new ApiProvider($this->tpay, $this->paymentCardFactory))->getTpayPaymentCardFactory();
-            $params = $this->getRequest()->getParams();
-            $validParams = $this->paymentCards->handleNotification($params);
+            $validParams = $this->cardTransactionModel->handleNotification();
             isset($validParams['type']) && $validParams['type'] === 'deregister' ?
-                $this->deregisterCard($validParams) : $this->checkPaymentNotification($validParams);
+                $this->deregisterCard($validParams) : $this->processSaleNotification($validParams);
+
             return $this
                 ->getResponse()
-                ->setStatusCode(Http::STATUS_CODE_200)
-                ->setContent(json_encode(array('result' => '1')));
+                ->setStatusCode(Http::STATUS_CODE_200);
         } catch (\Exception $e) {
             return false;
         }
-    }
 
-    private function deregisterCard($validParams)
-    {
-        $this->paymentCards->validateDeregisterSign($validParams['sign'], $validParams['cli_auth'],
-            $validParams['date'], isset($validParams['test_mode'])? $validParams['test_mode'] : '');
-        (new TpayTokensService($this->modelContext, $this->registry))
-            ->deleteCustomerToken($validParams['cli_auth']);
-    }
-
-    private function checkPaymentNotification($validParams)
-    {
-        $orderId = $validParams['order_id'];
-        $localData = $this->tpay->getTpayFormData($orderId);
-        $this->paymentCards->validateSign($validParams['sign'], isset($validParams['test_mode']) ? '1' : '',
-            $validParams['sale_auth'], $validParams['order_id'], $validParams['card'], (double)$localData['kwota'],
-            $validParams['date'], $localData['currency'],
-            isset($validParams['cli_auth']) ? $validParams['cli_auth'] : '');
-        $this->tpayService->setOrderStatus($orderId, $validParams, $this->tpay);
-        $payment = $this->tpayService->getPayment($orderId);
-        $paymentData = $payment->getData();
-        $additionalPaymentInformation = $paymentData['additional_information'];
-
-        if (isset($validParams['cli_auth'])) {
-            (new TpayTokensService($this->modelContext, $this->registry))
-                ->setCustomerToken($this->tpay->getCustomerId($orderId), $validParams['cli_auth'],
-                    $validParams['card'], $additionalPaymentInformation['card_vendor']);
-        }
     }
 
     /**
@@ -153,9 +134,7 @@ class Notification extends Action implements CsrfAwareActionInterface
      *
      * @return InvalidRequestException|null
      */
-    public function createCsrfValidationException(
-        RequestInterface $request
-    ): ?InvalidRequestException
+    public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
     {
         return null;
     }
@@ -172,4 +151,58 @@ class Notification extends Action implements CsrfAwareActionInterface
     {
         return true;
     }
+
+    private function deregisterCard($validParams)
+    {
+        $this->cardTransactionModel
+            ->setClientToken($validParams['cli_auth'])
+            ->currency = '';
+        $this->cardTransactionModel->validateCardSign(
+            $validParams['sign'],
+            '',
+            '',
+            $validParams['date'],
+            '',
+            isset($validParams['test_mode']) ? $validParams['test_mode'] : '',
+            'deregister'
+        );
+        (new TpayTokensService($this->modelContext, $this->registry))
+            ->deleteCustomerToken($validParams['cli_auth']);
+    }
+
+    private function processSaleNotification($validParams)
+    {
+        $orderId = $validParams['order_id'];
+        $localOrderDetails = $this->tpay->getTpayFormData($orderId);
+        $this->cardTransactionModel
+            ->setCurrency($localOrderDetails['currency'])
+            ->setAmount((double)$localOrderDetails['amount'])
+            ->setOrderID($orderId);
+        if (isset($validParams['cli_auth'])) {
+            $this->cardTransactionModel->setClientToken($validParams['cli_auth']);
+        }
+        $this->cardTransactionModel->validateCardSign(
+            $validParams['sign'],
+            $validParams['sale_auth'],
+            $validParams['card'],
+            $validParams['date'],
+            $validParams['status'],
+            isset($validParams['test_mode']) ? '1' : ''
+        );
+        $this->tpayService->setOrderStatus($orderId, $validParams, $this->tpay);
+        $payment = $this->tpayService->getPayment($orderId);
+        $paymentData = $payment->getData();
+        $additionalPaymentInformation = $paymentData['additional_information'];
+
+        if (isset($validParams['cli_auth'])) {
+            (new TpayTokensService($this->modelContext, $this->registry))
+                ->setCustomerToken(
+                    $this->tpay->getCustomerId($orderId),
+                    $validParams['cli_auth'],
+                    $validParams['card'],
+                    $additionalPaymentInformation['card_vendor']
+                );
+        }
+    }
+
 }

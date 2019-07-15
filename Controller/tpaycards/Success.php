@@ -2,7 +2,7 @@
 /**
  *
  * @category    payment gateway
- * @package     Tpaycom_Magento2.1
+ * @package     Tpaycom_Magento2.3
  * @author      tpay.com
  * @copyright   (https://tpay.com)
  */
@@ -14,7 +14,7 @@ use Magento\Framework\App\Action\Action;
 /**
  * Class Success
  *
- * @package tpaycom\magento2cards\Controller\tpaycardscards
+ * @package tpaycom\magento2cards\Controller\tpaycards
  */
 class Success extends Action
 {

@@ -2,7 +2,7 @@
 /**
  *
  * @category    payment gateway
- * @package     Tpaycom_Magento2.1
+ * @package     Tpaycom_Magento2.3
  * @author      tpay.com
  * @copyright   (https://tpay.com)
  */
@@ -23,15 +23,13 @@ use Magento\Framework\Validator\Exception;
 use Magento\Payment\Helper\Data;
 use Magento\Payment\Model\InfoInterface;
 use Magento\Payment\Model\Method\AbstractMethod;
-use Magento\Payment\Model\Method\Adapter;
 use Magento\Payment\Model\Method\Logger;
 use Magento\Quote\Api\Data\CartInterface;
-use Magento\Sales\Model\Order\Payment\Transaction;
+use Magento\Sales\Model\Order\Payment;
 use tpaycom\magento2cards\Api\Sales\CardsOrderRepositoryInterface;
 use tpaycom\magento2cards\Api\TpayCardsInterface;
 use tpaycom\magento2cards\Controller\tpaycards\CardRefunds;
-use tpaycom\magento2cards\lib\PaymentCardFactory;
-use tpaycom\magento2cards\lib\Validate;
+use tpayLibs\src\_class_tpay\Validators\FieldsValidator;
 
 /**
  * Class TpayCards
@@ -40,6 +38,8 @@ use tpaycom\magento2cards\lib\Validate;
  */
 class TpayCards extends AbstractMethod implements TpayCardsInterface
 {
+    use FieldsValidator;
+
     /**#@+
      * Payment configuration
      */
@@ -170,20 +170,19 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
         }
         $om = ObjectManager::getInstance();
         $resolver = $om->get('Magento\Framework\Locale\Resolver');
-        $language = Validate::validateCardLanguage($resolver->getLocale());
+        $language = $this->validateCardLanguage($resolver->getLocale());
 
         return [
-            'email'        => $this->escaper->escapeHtml($order->getCustomerEmail()),
-            'nazwisko'     => $this->escaper->escapeHtml($name),
-            'kwota'        => $amount,
-            'opis'         => 'Zamówienie ' . $orderId,
-            'crc'          => $orderId,
-            'pow_url_blad' => $this->urlBuilder->getUrl('magento2cards/tpaycards/error'),
-            'wyn_url'      => $this->urlBuilder->getUrl('magento2cards/tpaycards/notification'),
-            'pow_url'      => $this->urlBuilder->getUrl('magento2cards/tpaycards/success'),
-            'jezyk'        => $language,
-            'currency'     => $this->getISOCurrencyCode($order->getOrderCurrencyCode()),
-            'module'       => 'Magento ' . $this->getMagentoVersion(),
+            'email' => $this->escaper->escapeHtml($order->getCustomerEmail()),
+            'name' => $this->escaper->escapeHtml($name),
+            'amount' => $amount,
+            'description' => 'Zamówienie '.$orderId,
+            'crc' => $orderId,
+            'error_url' => $this->urlBuilder->getUrl('magento2cards/tpaycards/error'),
+            'success_url' => $this->urlBuilder->getUrl('magento2cards/tpaycards/success'),
+            'language' => $language,
+            'currency' => $this->getISOCurrencyCode($order->getOrderCurrencyCode()),
+            'module' => 'Magento '.$this->getMagentoVersion(),
         ];
     }
 
@@ -210,7 +209,7 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
 
     public function getISOCurrencyCode($orderCurrency)
     {
-        return Validate::validateCardCurrency($orderCurrency);
+        return $this->validateCardCurrency($orderCurrency);
     }
 
     /**
@@ -292,17 +291,22 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
     /**
      * Payment refund
      *
-     * @param InfoInterface $payment
+     * @param InfoInterface|Payment $payment
      * @param float $amount
      * @return $this
      * @throws Exception
      */
     public function refund(InfoInterface $payment, $amount)
     {
-        $refunds = new CardRefunds($this->getApiKey(), $this->getApiPassword(), $this->getVerificationCode(),
+        $refunds = new CardRefunds(
+            $this->getApiKey(),
+            $this->getApiPassword(),
+            $this->getVerificationCode(),
+            $this->getRSAKey(),
             $this->getHashType()
         );
-        $transactionId = $refunds->makeRefund($payment, $amount);
+        $order = $payment->getOrder();
+        $transactionId = $refunds->makeRefund($payment, $amount, $order->getOrderCurrencyCode());
         try {
             if ($transactionId) {
                 $payment
@@ -313,7 +317,7 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
             }
 
         } catch (\Exception $e) {
-            $this->debugData(['transaction_id' => $transactionId, 'exception' => $e->getMessage()]);
+            $this->logger->debug(['transaction_id' => $transactionId, 'exception' => $e->getMessage()]);
             $this->_logger->error(__('Payment refunding error.'));
             throw new Exception(__('Payment refunding error.'));
         }

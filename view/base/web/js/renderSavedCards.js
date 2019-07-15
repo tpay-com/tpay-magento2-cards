@@ -64,7 +64,7 @@ require(['jquery', 'mage/translate'], function ($, $t) {
             var card = userTokens[i];
             var cardCode = card.cardShortCode, cardId = card.id;
             var vendor = card.vendor;
-            var img = '<img id="saved_icon" class="'+ vendor +'"/>';
+            var img = '<img id="saved_icon" class="tpay-'+ vendor +'-icon"/>';
             divContent += ('<input type="radio" name="savedId" id="cardN' + cardId + '" value="' + cardId + '"/>');
             divContent += ('<label for="cardN' + cardId + '" name="' + vendor + '">' + text.concat(cardCode) + img + '</label><br/>');
         }

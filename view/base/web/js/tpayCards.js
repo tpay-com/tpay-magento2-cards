@@ -8,24 +8,22 @@ require(['jquery', 'mage/translate'], function ($, $t) {
         const TRIGGER_EVENTS = 'input change blur';
 
         function setWrong($elem) {
-            $elem.addClass('wrong').css({
-                'border': '2px solid #ff9696',
-                'box-shadow': '0 1px 3px #dcdcdc',
-                'background': '#ffeeee'
-            });
+            $elem.addClass('wrong').removeClass('valid');
             $("#tpaycom_magento2cards_submit").addClass('disabled');
         }
 
         function setValid($elem) {
-            $elem.removeClass('wrong').removeAttr('style');
+            $elem.addClass('valid').removeClass('wrong');
         }
 
         function validateCcNumber($elem) {
             var isValid = false,
                 ccNumber = $elem.val().replace(/\s/g, '').substring(0, 16),
                 supported = ['mastercard', 'maestro', 'visa'],
-                type = $.payment.cardType(ccNumber);
+                type = $.payment.cardType(ccNumber),
+                cardTypeHolder = $('.tpay-card-icon');
             $elem.val($.payment.formatCardNumber($elem.val()));
+            cardTypeHolder.attr('class', 'tpay-card-icon');
             $('div.card_icon').removeClass('hover');
             if (supported.indexOf(type) < 0 && ccNumber.length > 1) {
                 $('#info_msg').css('visibility', 'visible').text($t('Sorry, your credit card type is currently not supported. Please try another payment method.'));
@@ -40,7 +38,7 @@ require(['jquery', 'mage/translate'], function ($, $t) {
                 setWrong($elem);
             }
             if (type !== '') {
-                $('#' + type).addClass('hover');
+                cardTypeHolder.addClass('tpay-' + type + '-icon');
             }
             enablePayment();
 

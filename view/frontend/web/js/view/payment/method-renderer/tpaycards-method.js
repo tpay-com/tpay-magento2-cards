@@ -1,7 +1,7 @@
 /**
  *
  * @category    payment gateway
- * @package     Tpaycom_Magento2.1
+ * @package     Tpaycom_Magento2.3
  * @author      Tpay.com
  * @copyright   (https://tpay.com)
  */
@@ -64,7 +64,7 @@ define(
             showSaveBox: function () {
                 if (window.checkoutConfig.tpaycards.payment.isCustomerLoggedIn
                     && window.checkoutConfig.tpaycards.payment.isSavingEnabled) {
-                    $('.amPmCheckbox').css('display', 'block');
+                    $('#tpay-card-save-checkbox').css('display', 'block');
                 }
             },
             isActive: function () {

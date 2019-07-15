@@ -2,7 +2,7 @@
 /**
  *
  * @category    payment gateway
- * @package     Tpaycom_Magento2.1
+ * @package     Tpaycom_Magento2.3
  * @author      tpay.com
  * @copyright   (https://tpay.com)
  */
@@ -13,7 +13,6 @@ use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Framework\View\Asset\Repository;
 use Magento\Payment\Model\MethodInterface;
 use tpaycom\magento2cards\Api\TpayCardsInterface;
-
 use Magento\Payment\Helper\Data as PaymentHelper;
 use tpaycom\magento2cards\Service\TpayTokensService;
 
@@ -122,7 +121,6 @@ class TpayCardsConfigProvider implements ConfigProviderInterface
     public function fetchJavaScripts()
     {
         $script[] = 'tpaycom_magento2cards::js/jquery.payment.min.js';
-        $script[] = 'tpaycom_magento2cards::js/jquery.min.js';
         $script[] = 'tpaycom_magento2cards::js/jsencrypt.min.js';
         $script[] = 'tpaycom_magento2cards::js/string_routines.js';
         $script[] = 'tpaycom_magento2cards::js/tpayCards.js';

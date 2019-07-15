@@ -2,7 +2,7 @@
 /**
  *
  * @category    payment gateway
- * @package     Tpaycom_Magento2.1
+ * @package     Tpaycom_Magento2.3
  * @author      tpay.com
  * @copyright   (https://tpay.com)
  */
@@ -14,18 +14,17 @@ use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Model\Context as ModelContext;
 use tpaycom\magento2cards\Api\TpayCardsInterface;
-use tpaycom\magento2cards\lib\PaymentCardFactory;
-use tpaycom\magento2cards\lib\ResponseFields;
-use tpaycom\magento2cards\lib\Validate;
-use tpaycom\magento2cards\Model\ApiProvider;
+use tpaycom\magento2cards\Model\CardTransactionModel;
+use tpaycom\magento2cards\Model\CardTransactionModelFactory;
 use tpaycom\magento2cards\Service\TpayService;
 use tpaycom\magento2cards\Service\TpayTokensService;
 use Magento\Framework\Registry;
+use tpayLibs\src\_class_tpay\Utilities\Util;
 
 /**
  * Class CardPayment
  *
- * @package tpaycom\magento2cards\Controller\tpaycardscards
+ * @package tpaycom\magento2cards\Controller\tpaycards
  */
 class CardPayment extends Action
 {
@@ -59,12 +58,20 @@ class CardPayment extends Action
      */
     private $tpay;
 
-    private $validate;
-    private $apiFactory;
-    private $paymentCardFactory;
+    private $cardTransactionFactory;
+
     private $registry;
+
     private $modelContext;
+
     private $tokensService;
+
+    /**
+     * @var CardTransactionModel
+     */
+    private $cardTransactionModel;
+
+    private $tpayPaymentConfig;
 
     /**
      * {@inheritdoc}
@@ -77,19 +84,28 @@ class CardPayment extends Action
         TpayCardsInterface $tpayModel,
         TpayService $tpayService,
         Session $checkoutSession,
-        Validate $validate,
-        PaymentCardFactory $paymentCardFactory,
+        CardTransactionModelFactory $paymentCardFactory,
         ModelContext $modelContext,
         Registry $registry
     ) {
         $this->tpay = $tpayModel;
         $this->tpayService = $tpayService;
         $this->checkoutSession = $checkoutSession;
-        $this->validate = $validate;
-        $this->paymentCardFactory = $paymentCardFactory;
+        $this->cardTransactionFactory = $paymentCardFactory;
         $this->modelContext = $modelContext;
         $this->registry = $registry;
         $this->tokensService = new TpayTokensService($this->modelContext, $this->registry);
+        $this->cardTransactionModel = $this->cardTransactionFactory->create(
+            [
+                'apiPassword' => $this->tpay->getApiPassword(),
+                'apiKey' => $this->tpay->getApiKey(),
+                'verificationCode' => $this->tpay->getVerificationCode(),
+                'keyRsa' => $this->tpay->getRSAKey(),
+                'hashType' => $this->tpay->getHashType(),
+            ]
+        );
+        Util::$loggingEnabled = false;
+
         parent::__construct($context);
     }
 
@@ -99,12 +115,20 @@ class CardPayment extends Action
     public function execute()
     {
         $orderId = $this->checkoutSession->getLastRealOrderId();
-        $this->apiFactory = (new ApiProvider($this->tpay, $this->paymentCardFactory))->getTpayCardAPI();
         if ($orderId) {
             $payment = $this->tpayService->getPayment($orderId);
             $paymentData = $payment->getData();
             $this->tpayService->setOrderStatePendingPayment($orderId);
             $additionalPaymentInformation = $paymentData['additional_information'];
+            $this->tpayPaymentConfig = $this->tpay->getTpayFormData($orderId);
+            $this->cardTransactionModel
+                ->setEnablePowUrl(true)
+                ->setReturnUrls($this->tpayPaymentConfig['success_url'], $this->tpayPaymentConfig['error_url'])
+                ->setAmount($this->tpayPaymentConfig['amount'])
+                ->setCurrency($this->tpayPaymentConfig['currency'])
+                ->setLanguage(strtolower($this->tpayPaymentConfig['language']))
+                ->setOrderID($this->tpayPaymentConfig['crc'])
+                ->setModuleName($this->tpayPaymentConfig['module']);
 
             if (isset($additionalPaymentInformation['card_id']) && $additionalPaymentInformation['card_id'] !== false
                 && $this->tpay->getCardSaveEnabled()
@@ -123,7 +147,6 @@ class CardPayment extends Action
     private function processSavedCardPayment($orderId, $cardId)
     {
         $customerTokens = $this->tokensService->getCustomerTokens($this->tpay->getCustomerId($orderId));
-        $data = $this->tpay->getTpayFormData($orderId);
         $isValid = false;
         foreach ($customerTokens as $key => $value) {
             if ((int)$value['tokenId'] === $cardId) {
@@ -132,16 +155,19 @@ class CardPayment extends Action
                 $token = $value['token'];
             }
         }
-
         if ($isValid) {
             try {
-                $paymentResult = $this->apiFactory->completeSale($token, $data['opis'], $data['kwota'],
-                    $data['currency'], $data['crc'], $data['jezyk'], $data['module']);
-                if ((int)$paymentResult['result'] === 1
+                $paymentResult = $this->cardTransactionModel->presale($this->tpayPaymentConfig['description'], $token);
+                if (isset($paymentResult['sale_auth'])) {
+                    $paymentResult = $this->cardTransactionModel->sale($paymentResult['sale_auth'], $token);
+                }
+                if (
+                    (int)$paymentResult['result'] === 1
                     && isset($paymentResult['status'])
                     && $paymentResult['status'] === 'correct') {
                     $this->tpayService->setOrderStatus($orderId, $paymentResult, $this->tpay);
                     $this->tpayService->addCommentToHistory($orderId, 'Successful payment by saved card');
+
                     return $this->_redirect(static::SUCCESS_PATH);
                 } elseif (isset($paymentResult['status']) && $paymentResult['status'] === 'declined') {
                     $this->tpayService->addCommentToHistory($orderId,
@@ -151,27 +177,28 @@ class CardPayment extends Action
                         'Failed to pay by saved card, error: ' . $paymentResult['err_desc']);
                 }
             } catch (\Exception $e) {
-                return $this->trySaleAgain($data, $orderId);
+                return $this->trySaleAgain($orderId);
             }
         }
         if (!$isValid) {
             $this->tpayService->addCommentToHistory($orderId, 'Attempt of payment by not owned card has been blocked!');
         }
-        return $this->trySaleAgain($data, $orderId);
+
+        return $this->trySaleAgain($orderId);
     }
 
     /**
      * Redirect customer to tpay transaction panel and try to pay again
-     * @param array $data
      * @param $orderId
-     * @param bool $saveCard
      * @return \Magento\Framework\App\ResponseInterface
      */
-    private function trySaleAgain($data, $orderId, $saveCard = false)
+    private function trySaleAgain($orderId)
     {
-        $result = $this->apiFactory->registerSale($data['nazwisko'], $data['email'], $data['opis'], $data['kwota'],
-            $data['currency'], $data['crc'], !$saveCard, $data['jezyk'], true, $data['pow_url'], $data['pow_url_blad'],
-            $data['module']);
+        $result = $this->cardTransactionModel->registerSale(
+            $this->tpayPaymentConfig['name'],
+            $this->tpayPaymentConfig['email'],
+            $this->tpayPaymentConfig['description']
+        );
         if (isset($result['sale_auth'])) {
             $url = 'https://secure.tpay.com/cards?sale_auth=' . $result['sale_auth'];
             $this->tpayService->addCommentToHistory($orderId,
@@ -195,26 +222,24 @@ class CardPayment extends Action
     {
         $saveCard = isset($additionalPaymentInformation['card_save']) && $this->tpay->getCardSaveEnabled() ?
             (bool)$additionalPaymentInformation['card_save'] : false;
-        $paymentCardFactory = (new ApiProvider($this->tpay,
-            $this->paymentCardFactory))->getTpayPaymentCardFactory();
-        $localData = $this->tpay->getTpayFormData($orderId);
-        try {
-            $result = $this->createNewCardPayment($orderId, $additionalPaymentInformation, $saveCard);
-        } catch (\Exception $e) {
-            return $this->trySaleAgain($localData, $orderId, $saveCard);
+        if ($saveCard === true) {
+            $this->cardTransactionModel->setOneTimer(false);
         }
-        if (isset($result[ResponseFields::URL3DS])) {
-            $url3ds = $result[ResponseFields::URL3DS];
+        try {
+            $result = $this->createNewCardPayment($additionalPaymentInformation);
+        } catch (\Exception $e) {
+            return $this->trySaleAgain($orderId);
+        }
+        if (isset($result['3ds_url'])) {
+            $url3ds = $result['3ds_url'];
             $this->tpayService->addCommentToHistory($orderId, '3DS Transaction link ' . $url3ds);
             $this->addToPaymentData($orderId, 'transaction_url', $url3ds);
 
             return $this->_redirect($url3ds);
 
         } else {
-            if (isset($result[ResponseFields::STATUS]) && (int)$result[ResponseFields::STATUS] === 'correct') {
-                $paymentCardFactory->validateNon3dsSign($result['sign'], isset($result['test_mode']) ? '1' : '',
-                    $result['sale_auth'], '', $result['card'], $localData['kwota'], $result['date'],
-                    $localData['currency']);
+            if (isset($result['status']) && (int)$result['status'] === 'correct') {
+                $this->validateNon3dsSign($result);
             }
             $this->tpayService->setOrderStatus($orderId, $result, $this->tpay);
 
@@ -223,32 +248,50 @@ class CardPayment extends Action
                     ->setCustomerToken($this->tpay->getCustomerId($orderId), $result['cli_auth'], $result['card'],
                         $additionalPaymentInformation['card_vendor']);
             }
-            return (int)$result[ResponseFields::RESULT] === 1 && isset($result[ResponseFields::STATUS])
-            && $result[ResponseFields::STATUS] === 'correct' ?
+            return (int)$result['result'] === 1 && isset($result['status'])
+            && $result['status'] === 'correct' ?
                 $this->_redirect(static::SUCCESS_PATH) :
-                $this->trySaleAgain($localData, $orderId, $saveCard);
+                $this->trySaleAgain($orderId);
         }
     }
 
     /**
      * Create  card payment for transaction data
      *
-     * @param int $orderId
      * @param array $additionalPaymentInformation
-     * @param $saveCard
      * @return array
      */
-    private function createNewCardPayment($orderId, array $additionalPaymentInformation, $saveCard)
+    private function createNewCardPayment(array $additionalPaymentInformation)
     {
-        $data = $this->tpay->getTpayFormData($orderId);
         $cardData = str_replace(' ', '+', $additionalPaymentInformation['card_data']);
-        unset($additionalPaymentInformation['card_data']);
-        $data = array_merge($data, $additionalPaymentInformation);
 
-        return $this->apiFactory->secureSale($data['nazwisko'], $data['email'], $data['opis'], $data['kwota'],
-            $cardData, $data['currency'], $data['crc'], !$saveCard, $data['jezyk'], true, $data['pow_url'],
-            $data['pow_url_blad'], $data['module']
+        return $this->cardTransactionModel->registerSale(
+            $this->tpayPaymentConfig['name'],
+            $this->tpayPaymentConfig['email'],
+            $this->tpayPaymentConfig['description'],
+            $cardData
         );
+    }
+
+    private function validateNon3dsSign($tpayResponse)
+    {
+        $testMode = isset($result['test_mode']) ? '1' : '';
+        $cliAuth = isset($result['cli_auth']) ? $result['cli_auth'] : '';
+        $localHash = hash(
+            $this->tpay->getHashType(),
+            $testMode.
+            $tpayResponse['sale_auth'].
+            $cliAuth.
+            $tpayResponse['card'].
+            $this->tpayPaymentConfig['currency'].
+            $this->tpayPaymentConfig['amount'].
+            $tpayResponse['date'].
+            $tpayResponse['status'].
+            $this->tpay->getVerificationCode()
+        );
+        if ($tpayResponse['sign'] !== $localHash) {
+            throw new \Exception('Card payment - invalid checksum');
+        }
     }
 
 }

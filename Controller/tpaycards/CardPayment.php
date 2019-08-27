@@ -140,8 +140,8 @@ class CardPayment extends Action
             }
         }
         $this->checkoutSession->unsQuoteId();
-        return $this->_redirect(static::ERROR_PATH);
 
+        return $this->_redirect(static::ERROR_PATH);
     }
 
     private function processSavedCardPayment($orderId, $cardId)
@@ -194,6 +194,7 @@ class CardPayment extends Action
      */
     private function trySaleAgain($orderId)
     {
+        $this->cardTransactionModel->setCardData(null);
         $result = $this->cardTransactionModel->registerSale(
             $this->tpayPaymentConfig['name'],
             $this->tpayPaymentConfig['email'],
@@ -240,14 +241,15 @@ class CardPayment extends Action
         } else {
             if (isset($result['status']) && (int)$result['status'] === 'correct') {
                 $this->validateNon3dsSign($result);
+                $this->tpayService->setOrderStatus($orderId, $result, $this->tpay);
             }
-            $this->tpayService->setOrderStatus($orderId, $result, $this->tpay);
 
             if (isset($result['cli_auth']) && isset($result['card']) && !$this->tpay->isCustomerGuest($orderId)) {
                 $this->tokensService
                     ->setCustomerToken($this->tpay->getCustomerId($orderId), $result['cli_auth'], $result['card'],
                         $additionalPaymentInformation['card_vendor']);
             }
+
             return (int)$result['result'] === 1 && isset($result['status'])
             && $result['status'] === 'correct' ?
                 $this->_redirect(static::SUCCESS_PATH) :

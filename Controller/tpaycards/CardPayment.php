@@ -239,7 +239,7 @@ class CardPayment extends Action
             return $this->_redirect($url3ds);
 
         } else {
-            if (isset($result['status']) && (int)$result['status'] === 'correct') {
+            if (isset($result['status']) && $result['status'] === 'correct') {
                 $this->validateNon3dsSign($result);
                 $this->tpayService->setOrderStatus($orderId, $result, $this->tpay);
             }

@@ -244,14 +244,17 @@ class CardPayment extends Action
                 $this->tpayService->setOrderStatus($orderId, $result, $this->tpay);
             }
 
-            if (isset($result['cli_auth']) && isset($result['card']) && !$this->tpay->isCustomerGuest($orderId)) {
+            if (isset($result['cli_auth'], $result['card']) && !$this->tpay->isCustomerGuest($orderId)) {
                 $this->tokensService
-                    ->setCustomerToken($this->tpay->getCustomerId($orderId), $result['cli_auth'], $result['card'],
-                        $additionalPaymentInformation['card_vendor']);
+                    ->setCustomerToken(
+                        $this->tpay->getCustomerId($orderId),
+                        $result['cli_auth'],
+                        $result['card'],
+                        $additionalPaymentInformation['card_vendor']
+                    );
             }
 
-            return (int)$result['result'] === 1 && isset($result['status'])
-            && $result['status'] === 'correct' ?
+            return (int)$result['result'] === 1 && isset($result['status']) && $result['status'] === 'correct' ?
                 $this->_redirect(static::SUCCESS_PATH) :
                 $this->trySaleAgain($orderId);
         }
@@ -277,8 +280,8 @@ class CardPayment extends Action
 
     private function validateNon3dsSign($tpayResponse)
     {
-        $testMode = isset($result['test_mode']) ? '1' : '';
-        $cliAuth = isset($result['cli_auth']) ? $result['cli_auth'] : '';
+        $testMode = isset($tpayResponse['test_mode']) ? '1' : '';
+        $cliAuth = isset($tpayResponse['cli_auth']) ? $tpayResponse['cli_auth'] : '';
         $localHash = hash(
             $this->tpay->getHashType(),
             $testMode.

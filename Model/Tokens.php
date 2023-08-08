@@ -22,10 +22,10 @@ class Tokens extends AbstractModel implements TokensInterface
         foreach ($tokensCollection as $token) {
             if ((int)$token->getCliId() === (int)$customerId) {
                 $results[] = [
-                    'tokenId'       => $token->getId(),
-                    'token'         => $token->getCliAuth(),
+                    'tokenId' => $token->getId(),
+                    'token' => $token->getCliAuth(),
                     'cardShortCode' => $token->getShortCode(),
-                    'vendor'        => $token->getVendor(),
+                    'vendor' => $token->getVendor(),
                 ];
             }
         }
@@ -52,7 +52,7 @@ class Tokens extends AbstractModel implements TokensInterface
 
     public function setCreationTime()
     {
-        $this->setData('created_at', date("Y-m-d H:i:s"));
+        $this->setData('created_at', date('Y-m-d H:i:s'));
         return $this;
     }
 
@@ -71,5 +71,4 @@ class Tokens extends AbstractModel implements TokensInterface
     {
         $this->_init('tpaycom\magento2cards\Model\ResourceModel\Token');
     }
-
 }

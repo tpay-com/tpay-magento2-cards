@@ -1,11 +1,4 @@
 <?php
-/**
- *
- * @category    payment gateway
- * @package     Tpaycom_Magento2.3
- * @author      tpay.com
- * @copyright   (https://tpay.com)
- */
 
 namespace tpaycom\magento2cards\Model;
 
@@ -15,10 +8,10 @@ use Magento\Framework\Api\ExtensionAttributesFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\DataObject;
+use Magento\Framework\Escaper;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Registry;
 use Magento\Framework\UrlInterface;
-use Magento\Framework\Escaper;
 use Magento\Framework\Validator\Exception;
 use Magento\Payment\Helper\Data;
 use Magento\Payment\Model\InfoInterface;
@@ -33,17 +26,16 @@ use tpayLibs\src\_class_tpay\Validators\FieldsValidator;
 
 /**
  * Class TpayCards
- *
- * @package tpaycom\magento2cards\Model
  */
 class TpayCards extends AbstractMethod implements TpayCardsInterface
 {
     use FieldsValidator;
 
-    /**#@+
+    /**
      * Payment configuration
      */
     protected $_code = self::CODE;
+
     protected $_isGateway = true;
     protected $_canCapture = false;
     protected $_canCapturePartial = false;
@@ -52,7 +44,6 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
     /*#@-*/
 
     protected $availableCurrencyCodes = ['PLN'];
-
     protected $termsURL = 'https://secure.tpay.com/regulamin.pdf';
 
     /**
@@ -86,10 +77,6 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
 
     /**
      * {@inheritdoc}
-     *
-     * @param UrlInterface $urlBuilder
-     * @param Session $checkoutSession
-     * @param CardsOrderRepositoryInterface $orderRepository
      */
     public function __construct(
         Context $context,
@@ -136,7 +123,7 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
      */
     public function getPaymentRedirectUrl()
     {
-        return $this->urlBuilder->getUrl('magento2cards/tpaycards/redirect', ['uid' => time() . uniqid(true)]);
+        return $this->urlBuilder->getUrl('magento2cards/tpaycards/redirect', ['uid' => time().uniqid(true)]);
     }
 
     /**
@@ -163,7 +150,7 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
         $order = $this->getOrder($orderId);
         $billingAddress = $order->getBillingAddress();
         $amount = number_format($order->getGrandTotal(), 2, '.', '');
-        $name = $billingAddress->getData('firstname') . ' ' . $billingAddress->getData('lastname');
+        $name = $billingAddress->getData('firstname').' '.$billingAddress->getData('lastname');
         $companyName = $billingAddress->getData('company');
         if (strlen($name) <= 3 && !empty($companyName) && strlen($companyName) > 3) {
             $name = $companyName;
@@ -188,11 +175,12 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
 
     /**
      * @param int $orderId
+     *
      * @return \Magento\Sales\Api\Data\OrderInterface
      */
     protected function getOrder($orderId = null)
     {
-        if ($orderId === null) {
+        if (null === $orderId) {
             $orderId = $this->getCheckout()->getLastRealOrderId();
         }
 
@@ -225,7 +213,8 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
         if ($quote
             && (
                 $quote->getBaseGrandTotal() < $minAmount
-                || ($maxAmount && $quote->getBaseGrandTotal() > $maxAmount))
+                || ($maxAmount && $quote->getBaseGrandTotal() > $maxAmount)
+            )
         ) {
             return false;
         }
@@ -272,17 +261,17 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
         $info->setAdditionalInformation(
             static::CARD_VENDOR,
             isset($additionalData[static::CARD_VENDOR])
-            && in_array($additionalData[static::CARD_VENDOR], $this->supportedVendors) ?
-                $additionalData[static::CARD_VENDOR] : 'undefined'
+            && in_array($additionalData[static::CARD_VENDOR], $this->supportedVendors)
+                ? $additionalData[static::CARD_VENDOR] : 'undefined'
         );
         $info->setAdditionalInformation(
             static::CARD_SAVE,
-            isset($additionalData[static::CARD_SAVE]) ? $additionalData[static::CARD_SAVE] === '1' : false
+            isset($additionalData[static::CARD_SAVE]) ? '1' === $additionalData[static::CARD_SAVE] : false
         );
         $info->setAdditionalInformation(
             static::CARD_ID,
-            isset($additionalData[static::CARD_ID]) && is_numeric($additionalData[static::CARD_ID]) ?
-                $additionalData[static::CARD_ID] : false
+            isset($additionalData[static::CARD_ID]) && is_numeric($additionalData[static::CARD_ID])
+                ? $additionalData[static::CARD_ID] : false
         );
 
         return $this;
@@ -292,9 +281,11 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
      * Payment refund
      *
      * @param InfoInterface|Payment $payment
-     * @param float $amount
-     * @return $this
+     * @param float                 $amount
+     *
      * @throws Exception
+     *
+     * @return $this
      */
     public function refund(InfoInterface $payment, $amount)
     {
@@ -359,6 +350,7 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
 
     /**
      * @param int $orderId
+     *
      * @return string
      */
     public function getCustomerId($orderId)
@@ -369,7 +361,9 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
 
     /**
      * check if customer was logged while placing order
+     *
      * @param int $orderId
+     *
      * @return bool
      */
     public function isCustomerGuest($orderId)
@@ -380,6 +374,7 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
 
     /**
      * check if customer is logged in on current session
+     *
      * @return bool
      */
     public function isCustomerLoggedIn()
@@ -391,6 +386,7 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
 
     /**
      * check for customer ID on current session
+     *
      * @return bool
      */
     public function getCheckoutCustomerId()
@@ -414,5 +410,4 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
         $productMetadata = $objectManager->get('Magento\Framework\App\ProductMetadataInterface');
         return $productMetadata->getVersion();
     }
-
 }

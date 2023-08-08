@@ -1,20 +1,14 @@
 <?php
-/**
- * Created by tpay.com.
- * Date: 09.11.2017
- * Time: 12:00
- */
 
 namespace tpaycom\magento2cards\Service;
 
 use Magento\Framework\Data\Collection\AbstractDb;
-use Magento\Framework\Registry;
 use Magento\Framework\Model\Context;
+use Magento\Framework\Registry;
 use tpaycom\magento2cards\Model\Tokens;
 
 class TpayTokensService extends Tokens
 {
-
     public function __construct(
         Context $context,
         Registry $registry,
@@ -54,5 +48,4 @@ class TpayTokensService extends Tokens
     {
         return $this->deleteToken($token)->save();
     }
-
 }

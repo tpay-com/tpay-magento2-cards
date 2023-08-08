@@ -13,5 +13,4 @@ interface TokensInterface
     public function setShortCode($shortCode);
 
     public function setCreationTime();
-
 }

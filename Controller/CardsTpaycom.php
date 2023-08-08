@@ -1,18 +1,10 @@
 <?php
-/**
- *
- * @category    payment gateway
- * @package     Tpaycom_Magento2.3
- * @author      tpay.com
- * @copyright   (https://tpay.com)
- */
 
 namespace tpaycom\magento2cards\Controller;
+
 /**
  * Class CardsTpaycom
- * @package tpaycom\magento2cards\Controller
  */
-
 abstract class CardsTpaycom extends \Magento\Framework\App\Action\Action
 {
     // Local IP address
@@ -39,7 +31,6 @@ abstract class CardsTpaycom extends \Magento\Framework\App\Action\Action
     /**
      * @var \tpaycom\magento2cards\Model\TpayCards
      */
-
     protected $_model;
 
     /**
@@ -48,26 +39,15 @@ abstract class CardsTpaycom extends \Magento\Framework\App\Action\Action
      * @var \Magento\Framework\Locale\Resolver
      */
     protected $localeResolver;
+
     private $objectManager;
 
-    /**
-     * @param \Magento\Framework\App\Action\Context $context
-     * @param \Magento\Customer\Model\Session $customerSession
-     * @param \Magento\Checkout\Model\Session $checkoutSession
-     * @param \Magento\Sales\Model\OrderFactory $orderFactory
-     * @param \Magento\Framework\Locale\Resolver $localeResolver
-     */
     public function __construct(
-        \Magento\Framework\App\Action\Context $context
-        ,
-        \Magento\Customer\Model\Session $customerSession
-        ,
-        \Magento\Checkout\Model\Session $checkoutSession
-        ,
-        \Magento\Sales\Model\OrderFactory $orderFactory
-        ,
-        \tpaycom\magento2cards\Model\TpayCards $model
-        ,
+        \Magento\Framework\App\Action\Context $context,
+        \Magento\Customer\Model\Session $customerSession,
+        \Magento\Checkout\Model\Session $checkoutSession,
+        \Magento\Sales\Model\OrderFactory $orderFactory,
+        \tpaycom\magento2cards\Model\TpayCards $model,
         \Magento\Framework\Locale\Resolver $localeResolver
     ) {
         $this->_customerSession = $customerSession;

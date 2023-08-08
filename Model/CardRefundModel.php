@@ -1,11 +1,4 @@
 <?php
-/**
- *
- * @category    payment gateway
- * @package     Tpaycom_Magento2.3
- * @author      Tpay.com
- * @copyright   (https://tpay.com)
- */
 
 namespace tpaycom\magento2cards\Model;
 
@@ -13,8 +6,6 @@ use tpayLibs\src\_class_tpay\Refunds\CardRefunds;
 
 /**
  * Class CardRefund
- *
- * @package tpaycom\magento2cards\Model
  */
 class CardRefundModel extends CardRefunds
 {
@@ -36,5 +27,4 @@ class CardRefundModel extends CardRefunds
         $this->cardHashAlg = $hashType;
         parent::__construct();
     }
-
 }

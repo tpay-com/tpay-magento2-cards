@@ -1,25 +1,15 @@
 <?php
-/**
- *
- * @category    payment gateway
- * @package     Tpaycom_Magento2.3
- * @author      tpay.com
- * @copyright   (https://tpay.com)
- */
 
 namespace tpaycom\magento2cards\Controller\tpaycards;
 
+use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use tpaycom\magento2cards\Api\TpayCardsInterface;
-use tpaycom\magento2cards\Block\Payment\tpaycards\Redirect as RedirectBlock;
 use tpaycom\magento2cards\Service\TpayService;
-use Magento\Checkout\Model\Session;
 
 /**
  * Class Redirect
- *
- * @package tpaycom\magento2cards\Controller\tpaycards
  */
 class Redirect extends Action
 {
@@ -40,11 +30,6 @@ class Redirect extends Action
 
     /**
      * Redirect constructor.
-     *
-     * @param Context $context
-     * @param TpayCardsInterface $tpayModel
-     * @param TpayService $tpayService
-     * @param Session $checkoutSession
      */
     public function __construct(
         Context $context,
@@ -72,5 +57,4 @@ class Redirect extends Action
         }
         return $this->_redirect('magento2cards/tpaycards/CardPayment');
     }
-
 }

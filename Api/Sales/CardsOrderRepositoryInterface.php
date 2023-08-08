@@ -1,10 +1,4 @@
 <?php
-/**
- * @category    payment gateway
- * @package     Tpaycom_Magento2.3
- * @author      tpay.com
- * @copyright   (https://tpay.com)
- */
 
 namespace tpaycom\magento2cards\Api\Sales;
 
@@ -12,8 +6,6 @@ use Magento\Sales\Api\OrderRepositoryInterface as MagentoOrderRepositoryInterfac
 
 /**
  * Interface CardsOrderRepositoryInterface
- *
- * @package tpaycom\magento2cards\Api\Sales
  */
 interface CardsOrderRepositoryInterface extends MagentoOrderRepositoryInterface
 {

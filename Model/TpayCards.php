@@ -306,7 +306,6 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
                     ->setIsTransactionClosed(1)
                     ->setShouldCloseParentTransaction(1);
             }
-
         } catch (\Exception $e) {
             $this->logger->debug(['transaction_id' => $transactionId, 'exception' => $e->getMessage()]);
             $this->_logger->error(__('Payment refunding error.'));

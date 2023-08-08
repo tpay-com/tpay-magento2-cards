@@ -111,7 +111,6 @@ class Notification extends Action implements CsrfAwareActionInterface
         } catch (\Exception $e) {
             return false;
         }
-
     }
 
     /**

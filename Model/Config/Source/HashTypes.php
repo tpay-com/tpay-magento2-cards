@@ -32,7 +32,6 @@ class HashTypes implements ArrayInterface
             'ripemd160' => 'ripemd160',
             'ripemd320' => 'ripemd320',
             'md5' => 'md5',
-
         ];
     }
 }

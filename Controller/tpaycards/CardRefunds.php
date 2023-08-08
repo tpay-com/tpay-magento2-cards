@@ -65,6 +65,5 @@ class CardRefunds
         $errCode = isset($result['err_code']) ? ' error code: '.$result['err_code'] : '';
         $reason = isset($result['reason']) ? ' reason: '.$result['reason'] : '';
         throw new Exception(__('Payment refunding error. -'.$errCode.$errDesc.$reason));
-
     }
 }

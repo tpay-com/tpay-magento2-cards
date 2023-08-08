@@ -122,7 +122,6 @@ class CardPayment extends Action
                 return $this->processSavedCardPayment($orderId, $cardId);
             }
             return $this->processNewCardPayment($orderId, $additionalPaymentInformation);
-
         }
         $this->checkoutSession->unsQuoteId();
 
@@ -229,7 +228,6 @@ class CardPayment extends Action
             $this->addToPaymentData($orderId, 'transaction_url', $url3ds);
 
             return $this->_redirect($url3ds);
-
         }
             if (isset($result['status']) && 'correct' === $result['status']) {
                 $this->validateNon3dsSign($result);
@@ -249,7 +247,6 @@ class CardPayment extends Action
             return 1 === (int)$result['result'] && isset($result['status']) && 'correct' === $result['status']
                 ? $this->_redirect(static::SUCCESS_PATH)
                 : $this->trySaleAgain($orderId);
-
     }
 
     /**

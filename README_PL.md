@@ -1,6 +1,6 @@
 # Magento2-TpayCards
 
-Moduł Magento2 bramki płatności [Tpay](https://tpay.com) kartami kredytowymi.
+Bramka płatności [Tpay](https://tpay.com) kartami kredytowymi moduł Magento2. 
 
 [![Najnowsza stabilna wersja](https://img.shields.io/packagist/v/tpaycom/magento2cards.svg?label=obecna%20wersja)](https://packagist.org/packages/tpaycom/magento2cards)
 [![Wersja PHP](https://img.shields.io/packagist/php-v/tpaycom/magento2cards.svg)](https://php.net)
@@ -16,7 +16,7 @@ Moduł Magento2 bramki płatności [Tpay](https://tpay.com) kartami kredytowymi.
 2. Skopiuj pliki wtyczki do `app/code/tpaycom/magento2cards`.
 
 3. Jeśli masz już zainstalowany moduł [`magento2basic`](https://github.com/tpay-com/tpay-magento2-basic), możesz pominąć ten krok.
-   Pobierz i skopiuj wymaganą bibliotekę [`tpay-php`](https://github.com/tpay-com/tpay-php) do folderu `app/code`. W rezultacie powinieneś mieć 2 foldery w `app/code` - `tpaycom` oraz `tpayLibs`.
+   Pobierz i skopiuj wymaganą bibliotekę [`tpay-php`](https://github.com/tpay-com/tpay-php) do folderu `app/code`. W rezultacie powinieneś/powinnaś mieć 2 foldery w `app/code` - `tpaycom` oraz `tpayLibs`.
 
 4. Wykonaj następujące polecenia, aby włączyć moduł:
     ```bash

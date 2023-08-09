@@ -16,8 +16,6 @@ class CardRefunds
     private $keyRsa;
 
     /**
-     * Refunds constructor.
-     *
      * @param string $apiKey
      * @param string $apiPass
      * @param string $verificationCode

@@ -3,8 +3,6 @@
 namespace tpaycom\magento2cards\Api;
 
 /**
- * Interface TpayCardsInterface
- *
  * @api
  */
 interface TpayCardsInterface

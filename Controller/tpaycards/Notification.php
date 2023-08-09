@@ -18,9 +18,6 @@ use tpaycom\magento2cards\Service\TpayService;
 use tpaycom\magento2cards\Service\TpayTokensService;
 use tpayLibs\src\_class_tpay\Utilities\Util;
 
-/**
- * Class Notification
- */
 class Notification extends Action implements CsrfAwareActionInterface
 {
     /**

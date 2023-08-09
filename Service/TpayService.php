@@ -18,9 +18,6 @@ use tpaycom\magento2cards\Api\Sales\CardsOrderRepositoryInterface;
 use tpaycom\magento2cards\Api\TpayCardsInterface;
 use tpayLibs\src\Dictionaries\ISO_codes\CurrencyCodesDictionary;
 
-/**
- * Class TpayService
- */
 class TpayService extends RegisterCaptureNotificationOperation
 {
     /**
@@ -32,9 +29,6 @@ class TpayService extends RegisterCaptureNotificationOperation
     protected $invoiceService;
     private $objectManager;
 
-    /**
-     * TpayCards constructor.
-     */
     public function __construct(
         CardsOrderRepositoryInterface $orderRepository,
         BuilderInterface $builder,

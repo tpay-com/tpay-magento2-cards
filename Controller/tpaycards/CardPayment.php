@@ -14,9 +14,6 @@ use tpaycom\magento2cards\Service\TpayService;
 use tpaycom\magento2cards\Service\TpayTokensService;
 use tpayLibs\src\_class_tpay\Utilities\Util;
 
-/**
- * Class CardPayment
- */
 class CardPayment extends Action
 {
     const METHOD = 'method';
@@ -134,7 +131,7 @@ class CardPayment extends Action
         $isValid = false;
         foreach ($customerTokens as $key => $value) {
             if ((int)$value['tokenId'] === $cardId) {
-                //tokenId belongs to current customer
+                // tokenId belongs to current customer
                 $isValid = true;
                 $token = $value['token'];
             }

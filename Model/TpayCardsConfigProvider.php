@@ -9,9 +9,6 @@ use Magento\Payment\Model\MethodInterface;
 use tpaycom\magento2cards\Api\TpayCardsInterface;
 use tpaycom\magento2cards\Service\TpayTokensService;
 
-/**
- * Class TpayCardsConfigProvider
- */
 class TpayCardsConfigProvider implements ConfigProviderInterface
 {
     /**
@@ -34,9 +31,6 @@ class TpayCardsConfigProvider implements ConfigProviderInterface
      */
     protected $tokensService;
 
-    /**
-     * TpayCardsConfigProvider constructor.
-     */
     public function __construct(
         PaymentHelper $paymentHelper,
         Repository $assetRepository,

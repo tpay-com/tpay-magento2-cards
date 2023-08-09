@@ -4,14 +4,9 @@ namespace tpaycom\magento2cards\Model;
 
 use tpayLibs\src\_class_tpay\Refunds\CardRefunds;
 
-/**
- * Class CardRefund
- */
 class CardRefundModel extends CardRefunds
 {
     /**
-     * Transaction constructor.
-     *
      * @param string $apiPassword
      * @param string $apiKey
      * @param string $verificationCode

@@ -2,9 +2,6 @@
 
 namespace tpaycom\magento2cards\Controller;
 
-/**
- * Class CardsTpaycom
- */
 abstract class CardsTpaycom extends \Magento\Framework\App\Action\Action
 {
     // Local IP address

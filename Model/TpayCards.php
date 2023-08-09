@@ -24,9 +24,6 @@ use tpaycom\magento2cards\Api\TpayCardsInterface;
 use tpaycom\magento2cards\Controller\tpaycards\CardRefunds;
 use tpayLibs\src\_class_tpay\Validators\FieldsValidator;
 
-/**
- * Class TpayCards
- */
 class TpayCards extends AbstractMethod implements TpayCardsInterface
 {
     use FieldsValidator;
@@ -41,8 +38,6 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
     protected $_canCapturePartial = false;
     protected $_canRefund = true;
     protected $_canRefundInvoicePartial = true;
-    /*#@-*/
-
     protected $availableCurrencyCodes = ['PLN'];
     protected $termsURL = 'https://secure.tpay.com/regulamin.pdf';
 

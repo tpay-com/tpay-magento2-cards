@@ -8,9 +8,6 @@ use Magento\Framework\App\Action\Context;
 use tpaycom\magento2cards\Api\TpayCardsInterface;
 use tpaycom\magento2cards\Service\TpayService;
 
-/**
- * Class Redirect
- */
 class Redirect extends Action
 {
     /**
@@ -28,9 +25,6 @@ class Redirect extends Action
      */
     private $tpay;
 
-    /**
-     * Redirect constructor.
-     */
     public function __construct(
         Context $context,
         TpayCardsInterface $tpayModel,

@@ -4,9 +4,6 @@ namespace tpaycom\magento2cards\Controller\tpaycards;
 
 use Magento\Framework\App\Action\Action;
 
-/**
- * Class Error
- */
 class Error extends Action
 {
     /**

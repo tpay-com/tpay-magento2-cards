@@ -4,14 +4,9 @@ namespace tpaycom\magento2cards\Model;
 
 use tpayLibs\src\_class_tpay\Notifications\CardNotificationHandler;
 
-/**
- * Class CardTransaction
- */
 class CardTransactionModel extends CardNotificationHandler
 {
     /**
-     * Transaction constructor.
-     *
      * @param string $apiPassword
      * @param string $apiKey
      * @param string $verificationCode

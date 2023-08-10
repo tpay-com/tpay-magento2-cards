@@ -1,30 +1,16 @@
 <?php
-/**
- *
- * @category    payment gateway
- * @package     Tpaycom_Magento2.3
- * @author      tpay.com
- * @copyright   (https://tpay.com)
- */
 
 namespace tpaycom\magento2cards\Api;
 
 /**
- * Interface TpayCardsInterface
- *
- * @package tpaycom\magento2cards\Api
  * @api
  */
 interface TpayCardsInterface
 {
     const CODE = 'tpaycom_magento2cards';
-
     const CARDDATA = 'card_data';
-
     const CARD_SAVE = 'card_save';
-
     const CARD_ID = 'card_id';
-
     const CARD_VENDOR = 'card_vendor';
 
     /**
@@ -81,13 +67,11 @@ interface TpayCardsInterface
     public function getInvoiceSendMail();
 
     /**
-     * @param $orderId
      * @return string
      */
     public function getCustomerId($orderId);
 
     /**
-     * @param $orderId
      * @return bool
      */
     public function isCustomerGuest($orderId);
@@ -98,7 +82,7 @@ interface TpayCardsInterface
     public function isCustomerLoggedIn();
 
     /**
-     * @return int|null
+     * @return null|int
      */
     public function getCheckoutCustomerId();
 
@@ -106,5 +90,4 @@ interface TpayCardsInterface
      * @return bool
      */
     public function getCardSaveEnabled();
-
 }

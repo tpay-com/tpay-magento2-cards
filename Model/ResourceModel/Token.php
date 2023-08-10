@@ -10,5 +10,4 @@ class Token extends AbstractDb
     {
         $this->_init('tpay_credit_cards', 'id');
     }
-
 }

@@ -1,11 +1,4 @@
 <?php
-/**
- *
- * @category    payment gateway
- * @package     Tpaycom_Magento2.3
- * @author      tpay.com
- * @copyright   (https://tpay.com)
- */
 
 namespace tpaycom\magento2cards\Controller\tpaycards;
 
@@ -13,19 +6,14 @@ use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Model\Context as ModelContext;
+use Magento\Framework\Registry;
 use tpaycom\magento2cards\Api\TpayCardsInterface;
 use tpaycom\magento2cards\Model\CardTransactionModel;
 use tpaycom\magento2cards\Model\CardTransactionModelFactory;
 use tpaycom\magento2cards\Service\TpayService;
 use tpaycom\magento2cards\Service\TpayTokensService;
-use Magento\Framework\Registry;
 use tpayLibs\src\_class_tpay\Utilities\Util;
 
-/**
- * Class CardPayment
- *
- * @package tpaycom\magento2cards\Controller\tpaycards
- */
 class CardPayment extends Action
 {
     const METHOD = 'method';
@@ -59,11 +47,8 @@ class CardPayment extends Action
     private $tpay;
 
     private $cardTransactionFactory;
-
     private $registry;
-
     private $modelContext;
-
     private $tokensService;
 
     /**
@@ -75,9 +60,6 @@ class CardPayment extends Action
 
     /**
      * {@inheritdoc}
-     *
-     * @param TpayCardsInterface $tpayModel
-     * @param TpayService $tpayService
      */
     public function __construct(
         Context $context,
@@ -130,14 +112,13 @@ class CardPayment extends Action
                 ->setOrderID($this->tpayPaymentConfig['crc'])
                 ->setModuleName($this->tpayPaymentConfig['module']);
 
-            if (isset($additionalPaymentInformation['card_id']) && $additionalPaymentInformation['card_id'] !== false
+            if (isset($additionalPaymentInformation['card_id']) && false !== $additionalPaymentInformation['card_id']
                 && $this->tpay->getCardSaveEnabled()
             ) {
                 $cardId = (int)$additionalPaymentInformation['card_id'];
                 return $this->processSavedCardPayment($orderId, $cardId);
-            } else {
-                return $this->processNewCardPayment($orderId, $additionalPaymentInformation);
             }
+            return $this->processNewCardPayment($orderId, $additionalPaymentInformation);
         }
         $this->checkoutSession->unsQuoteId();
 
@@ -150,7 +131,7 @@ class CardPayment extends Action
         $isValid = false;
         foreach ($customerTokens as $key => $value) {
             if ((int)$value['tokenId'] === $cardId) {
-                //tokenId belongs to current customer
+                // tokenId belongs to current customer
                 $isValid = true;
                 $token = $value['token'];
             }
@@ -162,19 +143,24 @@ class CardPayment extends Action
                     $paymentResult = $this->cardTransactionModel->sale($paymentResult['sale_auth'], $token);
                 }
                 if (
-                    (int)$paymentResult['result'] === 1
+                    1 === (int)$paymentResult['result']
                     && isset($paymentResult['status'])
-                    && $paymentResult['status'] === 'correct') {
+                    && 'correct' === $paymentResult['status']) {
                     $this->tpayService->setOrderStatus($orderId, $paymentResult, $this->tpay);
                     $this->tpayService->addCommentToHistory($orderId, 'Successful payment by saved card');
 
                     return $this->_redirect(static::SUCCESS_PATH);
-                } elseif (isset($paymentResult['status']) && $paymentResult['status'] === 'declined') {
-                    $this->tpayService->addCommentToHistory($orderId,
-                        'Failed to pay by saved card, Elavon rejection code: ' . $paymentResult['reason']);
+                }
+                if (isset($paymentResult['status']) && 'declined' === $paymentResult['status']) {
+                    $this->tpayService->addCommentToHistory(
+                        $orderId,
+                        'Failed to pay by saved card, Elavon rejection code: '.$paymentResult['reason']
+                    );
                 } else {
-                    $this->tpayService->addCommentToHistory($orderId,
-                        'Failed to pay by saved card, error: ' . $paymentResult['err_desc']);
+                    $this->tpayService->addCommentToHistory(
+                        $orderId,
+                        'Failed to pay by saved card, error: '.$paymentResult['err_desc']
+                    );
                 }
             } catch (\Exception $e) {
                 return $this->trySaleAgain($orderId);
@@ -189,7 +175,7 @@ class CardPayment extends Action
 
     /**
      * Redirect customer to tpay transaction panel and try to pay again
-     * @param $orderId
+     *
      * @return \Magento\Framework\App\ResponseInterface
      */
     private function trySaleAgain($orderId)
@@ -201,9 +187,11 @@ class CardPayment extends Action
             $this->tpayPaymentConfig['description']
         );
         if (isset($result['sale_auth'])) {
-            $url = 'https://secure.tpay.com/cards?sale_auth=' . $result['sale_auth'];
-            $this->tpayService->addCommentToHistory($orderId,
-                'Customer has been redirected to tpay.com transaction panel. Transaction link ' . $url);
+            $url = 'https://secure.tpay.com/cards?sale_auth='.$result['sale_auth'];
+            $this->tpayService->addCommentToHistory(
+                $orderId,
+                'Customer has been redirected to tpay.com transaction panel. Transaction link '.$url
+            );
             $this->addToPaymentData($orderId, 'transaction_url', $url);
             return $this->_redirect($url);
         }
@@ -221,9 +209,9 @@ class CardPayment extends Action
 
     private function processNewCardPayment($orderId, $additionalPaymentInformation)
     {
-        $saveCard = isset($additionalPaymentInformation['card_save']) && $this->tpay->getCardSaveEnabled() ?
-            (bool)$additionalPaymentInformation['card_save'] : false;
-        if ($saveCard === true) {
+        $saveCard = isset($additionalPaymentInformation['card_save']) && $this->tpay->getCardSaveEnabled()
+            ? (bool)$additionalPaymentInformation['card_save'] : false;
+        if (true === $saveCard) {
             $this->cardTransactionModel->setOneTimer(false);
         }
         try {
@@ -233,13 +221,12 @@ class CardPayment extends Action
         }
         if (isset($result['3ds_url'])) {
             $url3ds = $result['3ds_url'];
-            $this->tpayService->addCommentToHistory($orderId, '3DS Transaction link ' . $url3ds);
+            $this->tpayService->addCommentToHistory($orderId, '3DS Transaction link '.$url3ds);
             $this->addToPaymentData($orderId, 'transaction_url', $url3ds);
 
             return $this->_redirect($url3ds);
-
-        } else {
-            if (isset($result['status']) && $result['status'] === 'correct') {
+        }
+            if (isset($result['status']) && 'correct' === $result['status']) {
                 $this->validateNon3dsSign($result);
                 $this->tpayService->setOrderStatus($orderId, $result, $this->tpay);
             }
@@ -254,16 +241,14 @@ class CardPayment extends Action
                     );
             }
 
-            return (int)$result['result'] === 1 && isset($result['status']) && $result['status'] === 'correct' ?
-                $this->_redirect(static::SUCCESS_PATH) :
-                $this->trySaleAgain($orderId);
-        }
+            return 1 === (int)$result['result'] && isset($result['status']) && 'correct' === $result['status']
+                ? $this->_redirect(static::SUCCESS_PATH)
+                : $this->trySaleAgain($orderId);
     }
 
     /**
      * Create  card payment for transaction data
      *
-     * @param array $additionalPaymentInformation
      * @return array
      */
     private function createNewCardPayment(array $additionalPaymentInformation)
@@ -284,19 +269,18 @@ class CardPayment extends Action
         $cliAuth = isset($tpayResponse['cli_auth']) ? $tpayResponse['cli_auth'] : '';
         $localHash = hash(
             $this->tpay->getHashType(),
-            $testMode.
-            $tpayResponse['sale_auth'].
-            $cliAuth.
-            $tpayResponse['card'].
-            $this->tpayPaymentConfig['currency'].
-            $this->tpayPaymentConfig['amount'].
-            $tpayResponse['date'].
-            $tpayResponse['status'].
-            $this->tpay->getVerificationCode()
+            $testMode
+            .$tpayResponse['sale_auth']
+            .$cliAuth
+            .$tpayResponse['card']
+            .$this->tpayPaymentConfig['currency']
+            .$this->tpayPaymentConfig['amount']
+            .$tpayResponse['date']
+            .$tpayResponse['status']
+            .$this->tpay->getVerificationCode()
         );
         if ($tpayResponse['sign'] !== $localHash) {
             throw new \Exception('Card payment - invalid checksum');
         }
     }
-
 }

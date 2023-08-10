@@ -1,11 +1,4 @@
 <?php
-/**
- *
- * @category    payment gateway
- * @package     Tpaycom_Magento2.3
- * @author      tpay.com
- * @copyright   (https://tpay.com)
- */
 
 namespace tpaycom\magento2cards\Controller\tpaycards;
 
@@ -16,20 +9,15 @@ use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\Response\Http;
 use Magento\Framework\HTTP\PhpEnvironment\RemoteAddress;
-use tpaycom\magento2cards\Model\CardTransactionModel;
-use tpaycom\magento2cards\Model\CardTransactionModelFactory;
-use tpaycom\magento2cards\Api\TpayCardsInterface;
-use tpaycom\magento2cards\Service\TpayService;
-use tpaycom\magento2cards\Service\TpayTokensService;
 use Magento\Framework\Model\Context as ModelContext;
 use Magento\Framework\Registry;
+use tpaycom\magento2cards\Api\TpayCardsInterface;
+use tpaycom\magento2cards\Model\CardTransactionModel;
+use tpaycom\magento2cards\Model\CardTransactionModelFactory;
+use tpaycom\magento2cards\Service\TpayService;
+use tpaycom\magento2cards\Service\TpayTokensService;
 use tpayLibs\src\_class_tpay\Utilities\Util;
 
-/**
- * Class Notification
- *
- * @package tpaycom\magento2cards\Controller\tpaycards
- */
 class Notification extends Action implements CsrfAwareActionInterface
 {
     /**
@@ -74,9 +62,6 @@ class Notification extends Action implements CsrfAwareActionInterface
 
     /**
      * {@inheritdoc}
-     *
-     * @param RemoteAddress $remoteAddress
-     * @param TpayCardsInterface $tpayModel
      */
     public function __construct(
         Context $context,
@@ -114,8 +99,8 @@ class Notification extends Action implements CsrfAwareActionInterface
     {
         try {
             $validParams = $this->cardTransactionModel->handleNotification();
-            isset($validParams['type']) && $validParams['type'] === 'deregister' ?
-                $this->deregisterCard($validParams) : $this->processSaleNotification($validParams);
+            isset($validParams['type']) && 'deregister' === $validParams['type']
+                ? $this->deregisterCard($validParams) : $this->processSaleNotification($validParams);
 
             return $this
                 ->getResponse()
@@ -123,16 +108,13 @@ class Notification extends Action implements CsrfAwareActionInterface
         } catch (\Exception $e) {
             return false;
         }
-
     }
 
     /**
      * Create exception in case CSRF validation failed.
      * Return null if default exception will suffice.
      *
-     * @param RequestInterface $request
-     *
-     * @return InvalidRequestException|null
+     * @return null|InvalidRequestException
      */
     public function createCsrfValidationException(RequestInterface $request)
     {
@@ -143,9 +125,7 @@ class Notification extends Action implements CsrfAwareActionInterface
      * Perform custom request validation.
      * Return null if default validation is needed.
      *
-     * @param RequestInterface $request
-     *
-     * @return bool|null
+     * @return null|bool
      */
     public function validateForCsrf(RequestInterface $request)
     {
@@ -176,7 +156,7 @@ class Notification extends Action implements CsrfAwareActionInterface
         $localOrderDetails = $this->tpay->getTpayFormData($orderId);
         $this->cardTransactionModel
             ->setCurrency($localOrderDetails['currency'])
-            ->setAmount((double)$localOrderDetails['amount'])
+            ->setAmount((float)$localOrderDetails['amount'])
             ->setOrderID($orderId);
         if (isset($validParams['cli_auth'])) {
             $this->cardTransactionModel->setClientToken($validParams['cli_auth']);
@@ -204,5 +184,4 @@ class Notification extends Action implements CsrfAwareActionInterface
                 );
         }
     }
-
 }

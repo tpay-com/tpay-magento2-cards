@@ -6,6 +6,7 @@
 [![PHP version](https://img.shields.io/packagist/php-v/tpaycom/magento2cards.svg)](https://php.net)
 [![License](https://img.shields.io/github/license/tpay-com/tpay-magento2-cards.svg)](LICENSE)
 [![CI status](https://github.com/tpay-com/tpay-magento2-cards/actions/workflows/ci.yaml/badge.svg?branch=master)](https://github.com/tpay-com/tpay-magento2-cards/actions)
+[![Type coverage](https://shepherd.dev/github/tpay-com/tpay-magento2-cards/coverage.svg)](https://shepherd.dev/github/tpay-com/tpay-magento2-cards)
 
 [Polish version :poland: wersja polska](./README_PL.md)
 

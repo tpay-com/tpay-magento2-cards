@@ -6,6 +6,7 @@ Bramka płatności [Tpay](https://tpay.com) kartami kredytowymi moduł Magento2.
 [![Wersja PHP](https://img.shields.io/packagist/php-v/tpaycom/magento2cards.svg)](https://php.net)
 [![Licencja](https://img.shields.io/github/license/tpay-com/tpay-magento2-cards.svg?label=licencja)](LICENSE)
 [![CI status](https://github.com/tpay-com/tpay-magento2-cards/actions/workflows/ci.yaml/badge.svg?branch=master)](https://github.com/tpay-com/tpay-magento2-cards/actions)
+[![Pokrycie typami](https://shepherd.dev/github/tpay-com/tpay-magento2-cards/coverage.svg)](https://shepherd.dev/github/tpay-com/tpay-magento2-cards)
 
 [English version :gb: wersja angielska](./README.md)
 

@@ -1,0 +1,11 @@
+parameters:
+  level: 0
+  paths:
+    - ../
+  excludePaths:
+    - ../Controller/tpaycards/Notification.php
+    - ../vendor/
+  ignoreErrors:
+    - '#^Call to an undefined method tpaycom\\magento2cards\\Controller\\CardsTpaycom::getFormatAmount\(\)\.$#'
+    - '# invalid type Magento\\Sales\\Model\\OrderFactory\.$#'
+    - '# invalid type tpaycom\\magento2cards\\Model\\CardTransactionModelFactory\.$#'

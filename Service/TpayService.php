@@ -134,8 +134,11 @@ class TpayService extends RegisterCaptureNotificationOperation
         }
         $order->save();
         if ($sendNewInvoiceMail) {
+            /** @var Invoice $invoice */
             foreach ($order->getInvoiceCollection() as $invoice) {
+                /** @var int $invoiceId */
                 $invoiceId = $invoice->getId();
+
                 $this->invoiceService->notify($invoiceId);
             }
         }
@@ -146,7 +149,7 @@ class TpayService extends RegisterCaptureNotificationOperation
     /**
      * Get description for transaction
      *
-     * @param array $validParams
+     * @param array<string> $validParams
      *
      * @return bool|string
      */

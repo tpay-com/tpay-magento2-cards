@@ -98,7 +98,9 @@ class Notification extends Action implements CsrfAwareActionInterface
     public function execute()
     {
         try {
+            /** @var array<string> $validParams */
             $validParams = $this->cardTransactionModel->handleNotification();
+
             isset($validParams['type']) && 'deregister' === $validParams['type']
                 ? $this->deregisterCard($validParams) : $this->processSaleNotification($validParams);
 
@@ -150,6 +152,13 @@ class Notification extends Action implements CsrfAwareActionInterface
             ->deleteCustomerToken($validParams['cli_auth']);
     }
 
+    /**
+     * @param array<string> $validParams
+     *
+     * @throws \tpayLibs\src\_class_tpay\Utilities\TException
+     *
+     * @return void
+     */
     private function processSaleNotification($validParams)
     {
         $orderId = $validParams['order_id'];
@@ -171,7 +180,10 @@ class Notification extends Action implements CsrfAwareActionInterface
         );
         $this->tpayService->setOrderStatus($orderId, $validParams, $this->tpay);
         $payment = $this->tpayService->getPayment($orderId);
+
+        /** @var array<string> $paymentData */
         $paymentData = $payment->getData();
+
         $additionalPaymentInformation = $paymentData['additional_information'];
 
         if (isset($validParams['cli_auth'])) {

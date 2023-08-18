@@ -19,9 +19,10 @@ class HashTypes implements ArrayInterface
         return $ret;
     }
 
-    /*
+    /**
      * Get options in "key-value" format
-     * @return array
+     *
+     * @return array<string>
      */
     public function toArray()
     {

@@ -43,7 +43,10 @@ class Redirect extends Action
      */
     public function execute()
     {
+        /** @var string $uid */
         $uid = $this->getRequest()->getParam('uid');
+
+        /** @var int $orderId */
         $orderId = $this->checkoutSession->getLastRealOrderId();
 
         if (!$orderId || !$uid) {

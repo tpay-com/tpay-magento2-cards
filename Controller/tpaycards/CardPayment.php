@@ -49,6 +49,8 @@ class CardPayment extends Action
     private $cardTransactionFactory;
     private $registry;
     private $modelContext;
+
+    /** @var TpayTokensService  */
     private $tokensService;
 
     /**
@@ -96,10 +98,15 @@ class CardPayment extends Action
      */
     public function execute()
     {
+        /** @var int $orderId */
         $orderId = $this->checkoutSession->getLastRealOrderId();
+
         if ($orderId) {
             $payment = $this->tpayService->getPayment($orderId);
+
+            /** @var array<string> $paymentData */
             $paymentData = $payment->getData();
+
             $this->tpayService->setOrderStatePendingPayment($orderId);
             $additionalPaymentInformation = $paymentData['additional_information'];
             $this->tpayPaymentConfig = $this->tpay->getTpayFormData($orderId);
@@ -128,7 +135,9 @@ class CardPayment extends Action
     private function processSavedCardPayment($orderId, $cardId)
     {
         $customerTokens = $this->tokensService->getCustomerTokens($this->tpay->getCustomerId($orderId));
+
         $isValid = false;
+        $token = '';
         foreach ($customerTokens as $key => $value) {
             if ((int)$value['tokenId'] === $cardId) {
                 // tokenId belongs to current customer
@@ -138,8 +147,11 @@ class CardPayment extends Action
         }
         if ($isValid) {
             try {
+                /** @var array<string> $paymentResult */
                 $paymentResult = $this->cardTransactionModel->presale($this->tpayPaymentConfig['description'], $token);
+
                 if (isset($paymentResult['sale_auth'])) {
+                    /** @var array<string> $paymentResult */
                     $paymentResult = $this->cardTransactionModel->sale($paymentResult['sale_auth'], $token);
                 }
                 if (
@@ -181,11 +193,14 @@ class CardPayment extends Action
     private function trySaleAgain($orderId)
     {
         $this->cardTransactionModel->setCardData(null);
+
+        /** @var array<string> $result */
         $result = $this->cardTransactionModel->registerSale(
             $this->tpayPaymentConfig['name'],
             $this->tpayPaymentConfig['email'],
             $this->tpayPaymentConfig['description']
         );
+
         if (isset($result['sale_auth'])) {
             $url = 'https://secure.tpay.com/cards?sale_auth='.$result['sale_auth'];
             $this->tpayService->addCommentToHistory(
@@ -249,7 +264,7 @@ class CardPayment extends Action
     /**
      * Create  card payment for transaction data
      *
-     * @return array
+     * @return array<string, string>
      */
     private function createNewCardPayment(array $additionalPaymentInformation)
     {
@@ -263,6 +278,9 @@ class CardPayment extends Action
         );
     }
 
+    /**
+     * @param array<string> $tpayResponse
+     */
     private function validateNon3dsSign($tpayResponse)
     {
         $testMode = isset($tpayResponse['test_mode']) ? '1' : '';

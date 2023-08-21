@@ -7,8 +7,10 @@ use Magento\Framework\Api\AttributeValueFactory;
 use Magento\Framework\Api\ExtensionAttributesFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ObjectManager;
+use Magento\Framework\App\ProductMetadataInterface;
 use Magento\Framework\DataObject;
 use Magento\Framework\Escaper;
+use Magento\Framework\Locale\Resolver;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Registry;
 use Magento\Framework\UrlInterface;
@@ -146,12 +148,18 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
         $billingAddress = $order->getBillingAddress();
         $amount = number_format($order->getGrandTotal(), 2, '.', '');
         $name = $billingAddress->getData('firstname').' '.$billingAddress->getData('lastname');
+
+        /** @var string $companyName */
         $companyName = $billingAddress->getData('company');
+
         if (strlen($name) <= 3 && !empty($companyName) && strlen($companyName) > 3) {
             $name = $companyName;
         }
         $om = ObjectManager::getInstance();
+
+        /** @var Resolver $resolver */
         $resolver = $om->get('Magento\Framework\Locale\Resolver');
+
         $language = $this->validateCardLanguage($resolver->getLocale());
 
         return [
@@ -176,6 +184,7 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
     protected function getOrder($orderId = null)
     {
         if (null === $orderId) {
+            /** @var int $orderId */
             $orderId = $this->getCheckout()->getLastRealOrderId();
         }
 
@@ -202,7 +211,10 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
      */
     public function isAvailable(CartInterface $quote = null)
     {
+        /** @var float|int $minAmount */
         $minAmount = $this->getConfigData('min_order_total');
+
+        /** @var float|int $maxAmount */
         $maxAmount = $this->getConfigData('max_order_total');
 
         if ($quote
@@ -246,7 +258,9 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
      */
     public function assignData(DataObject $data)
     {
+        /** @var array<string> $additionalData */
         $additionalData = $data->getData('additional_data');
+
         $info = $this->getInfoInstance();
 
         $info->setAdditionalInformation(
@@ -275,8 +289,8 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
     /**
      * Payment refund
      *
-     * @param InfoInterface|Payment $payment
-     * @param float                 $amount
+     * @param Payment $payment
+     * @param float   $amount
      *
      * @throws Exception
      *
@@ -374,7 +388,10 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
     public function isCustomerLoggedIn()
     {
         $objectManager = ObjectManager::getInstance();
+
+        /** @var \Magento\Customer\Model\Session $customerSession */
         $customerSession = $objectManager->get('Magento\Customer\Model\Session');
+
         return $customerSession->isLoggedIn();
     }
 
@@ -386,7 +403,10 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
     public function getCheckoutCustomerId()
     {
         $objectManager = ObjectManager::getInstance();
+
+        /** @var \Magento\Customer\Model\Session $customerSession */
         $customerSession = $objectManager->get('Magento\Customer\Model\Session');
+
         return $customerSession->getCustomerId();
     }
 
@@ -401,7 +421,10 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
     private function getMagentoVersion()
     {
         $objectManager = ObjectManager::getInstance();
+
+        /** @var ProductMetadataInterface $productMetadata */
         $productMetadata = $objectManager->get('Magento\Framework\App\ProductMetadataInterface');
+
         return $productMetadata->getVersion();
     }
 }

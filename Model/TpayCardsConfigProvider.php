@@ -101,6 +101,7 @@ class TpayCardsConfigProvider implements ConfigProviderInterface
 
     public function fetchJavaScripts()
     {
+        $script = [];
         $script[] = 'tpaycom_magento2cards::js/jquery.payment.min.js';
         $script[] = 'tpaycom_magento2cards::js/jsencrypt.min.js';
         $script[] = 'tpaycom_magento2cards::js/string_routines.js';

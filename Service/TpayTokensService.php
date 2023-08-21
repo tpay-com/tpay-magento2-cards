@@ -22,6 +22,7 @@ class TpayTokensService extends Tokens
     public function setCustomerToken($customerId, $token, $shortCode, $vendor)
     {
         $customerTokens = $this->getCustomerTokens($customerId);
+
         $exists = false;
         foreach ($customerTokens as $key => $value) {
             if ($value['token'] === $token) {
@@ -39,6 +40,9 @@ class TpayTokensService extends Tokens
         }
     }
 
+    /**
+     * @return array<array<string>>
+     */
     public function getCustomerTokens($customerId)
     {
         return $this->getToken($customerId);

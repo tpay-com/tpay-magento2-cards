@@ -10,19 +10,13 @@ use tpaycom\magento2cards\Service\TpayService;
 
 class Redirect extends Action
 {
-    /**
-     * @var Session
-     */
+    /** @var Session */
     protected $checkoutSession;
 
-    /**
-     * @var TpayService
-     */
+    /** @var TpayService */
     protected $tpayService;
 
-    /**
-     * @var TpayCardsInterface
-     */
+    /** @var TpayCardsInterface */
     private $tpay;
 
     public function __construct(
@@ -38,9 +32,6 @@ class Redirect extends Action
         parent::__construct($context);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function execute()
     {
         /** @var string $uid */
@@ -52,6 +43,7 @@ class Redirect extends Action
         if (!$orderId || !$uid) {
             return $this->_redirect('checkout/cart');
         }
+
         return $this->_redirect('magento2cards/tpaycards/CardPayment');
     }
 }

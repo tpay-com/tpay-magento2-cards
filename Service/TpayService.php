@@ -2,6 +2,7 @@
 
 namespace tpaycom\magento2cards\Service;
 
+use Exception;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Event\ManagerInterface as EventManagerInterface;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
@@ -20,9 +21,7 @@ use tpayLibs\src\Dictionaries\ISO_codes\CurrencyCodesDictionary;
 
 class TpayService extends RegisterCaptureNotificationOperation
 {
-    /**
-     * @var CardsOrderRepositoryInterface
-     */
+    /** @var CardsOrderRepositoryInterface */
     protected $orderRepository;
 
     protected $builder;
@@ -112,13 +111,13 @@ class TpayService extends RegisterCaptureNotificationOperation
         if (!$order->getId()) {
             return false;
         }
-        $sendNewInvoiceMail = (bool)$tpayModel->getInvoiceSendMail();
+        $sendNewInvoiceMail = (bool) $tpayModel->getInvoiceSendMail();
         $transactionDesc = $this->getTransactionDesc($validParams);
-        $orderAmount = (float)number_format($order->getGrandTotal(), 2, '.', '');
+        $orderAmount = (float) number_format($order->getGrandTotal(), 2, '.', '');
         $emailNotify = false;
 
         if (!isset($validParams['status']) || 'correct' !== $validParams['status']
-            || ((float)number_format($validParams['amount'], 2, '.', '') !== $orderAmount)
+            || ((float) number_format($validParams['amount'], 2, '.', '') !== $orderAmount)
         ) {
             $comment = __('Payment has been declined. ').'</br>'.$transactionDesc;
             $this->addCommentToHistory($orderId, $comment);
@@ -168,7 +167,7 @@ class TpayService extends RegisterCaptureNotificationOperation
 
         $transactionDesc = (is_null($error)) ? ' ' : ' Reason:  <b>'.$error.'</b>';
         $transactionDesc .= (isset($validParams['test_mode']))
-        && 1 === (int)$validParams['test_mode'] ? '<b> TEST </b>' : ' ';
+        && 1 === (int) $validParams['test_mode'] ? '<b> TEST </b>' : ' ';
 
         return $transactionDesc;
     }
@@ -180,7 +179,7 @@ class TpayService extends RegisterCaptureNotificationOperation
      * @param array        $validParams
      * @param bool         $skipFraudDetection
      *
-     * @throws \Exception
+     * @throws Exception
      */
     private function registerCaptureNotificationTpay(
         OrderPaymentInterface $payment,
@@ -188,9 +187,7 @@ class TpayService extends RegisterCaptureNotificationOperation
         $validParams,
         $skipFraudDetection = false
     ) {
-        /**
-         * @var Payment $payment
-         */
+        // @var Payment $payment
         $payment->setTransactionId(
             $this->transactionManager->generateTransactionId(
                 $payment,
@@ -200,15 +197,15 @@ class TpayService extends RegisterCaptureNotificationOperation
         );
 
         $order = $payment->getOrder();
-        $amount = (float)$amount;
+        $amount = (float) $amount;
         $invoice = $this->getInvoiceForTransactionId($order, $payment->getTransactionId());
         $orderCurrency = $order->getOrderCurrency()->getCode();
         if (!in_array($orderCurrency, CurrencyCodesDictionary::CODES)) {
-            throw new \Exception(sprintf('Order currency %s does not exist in Tpay dictionary!', $orderCurrency));
+            throw new Exception(sprintf('Order currency %s does not exist in Tpay dictionary!', $orderCurrency));
         }
         $orderCurrency = array_search($orderCurrency, CurrencyCodesDictionary::CODES);
         // register new capture
-        if (!$invoice && $payment->isCaptureFinal($amount) && $orderCurrency === (int)$validParams['currency']) {
+        if (!$invoice && $payment->isCaptureFinal($amount) && $orderCurrency === (int) $validParams['currency']) {
             $invoice = $order->prepareInvoice()->register();
             $invoice->setOrder($order);
             $order->addRelatedObject($invoice);

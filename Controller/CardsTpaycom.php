@@ -10,24 +10,16 @@ abstract class CardsTpaycom extends \Magento\Framework\App\Action\Action
     // STR EMPTY
     const STR_EMPTY = '';
 
-    /**
-     * @var \Magento\Customer\Model\Session
-     */
+    /** @var \Magento\Customer\Model\Session */
     protected $_customerSession;
 
-    /**
-     * @var \Magento\Checkout\Model\Session
-     */
+    /** @var \Magento\Checkout\Model\Session */
     protected $_checkoutSession;
 
-    /**
-     * @var \Magento\Sales\Model\OrderFactory
-     */
+    /** @var \Magento\Sales\Model\OrderFactory */
     protected $_orderFactory;
 
-    /**
-     * @var \tpaycom\magento2cards\Model\TpayCards
-     */
+    /** @var \tpaycom\magento2cards\Model\TpayCards */
     protected $_model;
 
     /**

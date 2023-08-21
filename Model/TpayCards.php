@@ -30,9 +30,7 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
 {
     use FieldsValidator;
 
-    /**
-     * Payment configuration
-     */
+    /** Payment configuration */
     protected $_code = self::CODE;
 
     protected $_isGateway = true;
@@ -43,24 +41,16 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
     protected $availableCurrencyCodes = ['PLN'];
     protected $termsURL = 'https://secure.tpay.com/regulamin.pdf';
 
-    /**
-     * @var UrlInterface
-     */
+    /** @var UrlInterface */
     protected $urlBuilder;
 
-    /**
-     * @var Session
-     */
+    /** @var Session */
     protected $checkoutSession;
 
-    /**
-     * @var CardsOrderRepositoryInterface
-     */
+    /** @var CardsOrderRepositoryInterface */
     protected $orderRepository;
 
-    /**
-     * @var Escaper
-     */
+    /** @var Escaper */
     protected $escaper;
 
     private $supportedVendors = [
@@ -72,9 +62,6 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
         'mastercard',
     ];
 
-    /**
-     * {@inheritdoc}
-     */
     public function __construct(
         Context $context,
         Registry $registry,
@@ -107,41 +94,26 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
         );
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getRSAKey()
     {
         return $this->getConfigData('rsa_key');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getPaymentRedirectUrl()
     {
         return $this->urlBuilder->getUrl('magento2cards/tpaycards/redirect', ['uid' => time().uniqid(true)]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getTermsURL()
     {
         return $this->termsURL;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getInvoiceSendMail()
     {
         return $this->getConfigData('send_invoice_email');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getTpayFormData($orderId = null)
     {
         $order = $this->getOrder($orderId);
@@ -176,36 +148,13 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
         ];
     }
 
-    /**
-     * @param int $orderId
-     *
-     * @return \Magento\Sales\Api\Data\OrderInterface
-     */
-    protected function getOrder($orderId = null)
-    {
-        if (null === $orderId) {
-            /** @var int $orderId */
-            $orderId = $this->getCheckout()->getLastRealOrderId();
-        }
-
-        return $this->orderRepository->getByIncrementId($orderId);
-    }
-
-    /**
-     * @return Session
-     */
-    protected function getCheckout()
-    {
-        return $this->checkoutSession;
-    }
-
     public function getISOCurrencyCode($orderCurrency)
     {
         return $this->validateCardCurrency($orderCurrency);
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      *
      * Check that tpay.com payments should be available.
      */
@@ -233,29 +182,11 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
         return parent::isAvailable($quote);
     }
 
-    /**
-     * Availability for currency
-     *
-     * @param string $currencyCode
-     *
-     * @return bool
-     */
-    protected function isAvailableForCurrency($currencyCode)
-    {
-        return (!in_array($currencyCode, $this->availableCurrencyCodes) && !$this->getMidType()) ? false : true;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function getMidType()
     {
         return $this->getConfigData('mid_type');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function assignData(DataObject $data)
     {
         /** @var array<string> $additionalData */
@@ -324,33 +255,21 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getApiKey()
     {
         return $this->getConfigData('api_key');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getApiPassword()
     {
         return $this->getConfigData('api_pass');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getVerificationCode()
     {
         return $this->getConfigData('verification_code');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getHashType()
     {
         return $this->getConfigData('hash_type');
@@ -364,6 +283,7 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
     public function getCustomerId($orderId)
     {
         $order = $this->getOrder($orderId);
+
         return $order->getCustomerId();
     }
 
@@ -377,6 +297,7 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
     public function isCustomerGuest($orderId)
     {
         $order = $this->getOrder($orderId);
+
         return $order->getCustomerIsGuest();
     }
 
@@ -410,12 +331,42 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
         return $customerSession->getCustomerId();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getCardSaveEnabled()
     {
-        return (bool)$this->getConfigData('card_save_enabled');
+        return (bool) $this->getConfigData('card_save_enabled');
+    }
+
+    /**
+     * @param int $orderId
+     *
+     * @return \Magento\Sales\Api\Data\OrderInterface
+     */
+    protected function getOrder($orderId = null)
+    {
+        if (null === $orderId) {
+            /** @var int $orderId */
+            $orderId = $this->getCheckout()->getLastRealOrderId();
+        }
+
+        return $this->orderRepository->getByIncrementId($orderId);
+    }
+
+    /** @return Session */
+    protected function getCheckout()
+    {
+        return $this->checkoutSession;
+    }
+
+    /**
+     * Availability for currency
+     *
+     * @param string $currencyCode
+     *
+     * @return bool
+     */
+    protected function isAvailableForCurrency($currencyCode)
+    {
+        return (!in_array($currencyCode, $this->availableCurrencyCodes) && !$this->getMidType()) ? false : true;
     }
 
     private function getMagentoVersion()

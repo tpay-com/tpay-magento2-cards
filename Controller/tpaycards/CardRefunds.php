@@ -56,7 +56,7 @@ class CardRefunds
         $tpayApi->setAmount($amount)->setCurrency($currency);
         $result = $tpayApi->refund($transactionId, __('Zwrot do zamówienia ').$payment->getOrder()->getRealOrderId());
 
-        if (1 === (int)$result['result'] && isset($result['status']) && 'correct' === $result['status']) {
+        if (1 === (int) $result['result'] && isset($result['status']) && 'correct' === $result['status']) {
             return $result['sale_auth'];
         }
         $errDesc = isset($result['err_desc']) ? ' error description: '.$result['err_desc'] : '';

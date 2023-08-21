@@ -10,6 +10,7 @@ class Tokens extends AbstractModel implements TokensInterface
     public function setCustomerId($id)
     {
         $this->setData('cli_id', $id);
+
         return $this;
     }
 
@@ -20,7 +21,7 @@ class Tokens extends AbstractModel implements TokensInterface
         $results = [];
         // Load all data of collection
         foreach ($tokensCollection as $token) {
-            if ((int)$token->getCliId() === (int)$customerId) {
+            if ((int) $token->getCliId() === (int) $customerId) {
                 $results[] = [
                     'tokenId' => $token->getId(),
                     'token' => $token->getCliAuth(),
@@ -29,30 +30,35 @@ class Tokens extends AbstractModel implements TokensInterface
                 ];
             }
         }
+
         return $results;
     }
 
     public function setToken($token)
     {
         $this->setData('cli_auth', $token);
+
         return $this;
     }
 
     public function setShortCode($shortCode)
     {
         $this->setData('short_code', $shortCode);
+
         return $this;
     }
 
     public function setVendor($vendorName)
     {
         $this->setData('vendor', $vendorName);
+
         return $this;
     }
 
     public function setCreationTime()
     {
         $this->setData('created_at', date('Y-m-d H:i:s'));
+
         return $this;
     }
 
@@ -64,6 +70,7 @@ class Tokens extends AbstractModel implements TokensInterface
                 $token->delete();
             }
         }
+
         return $this;
     }
 

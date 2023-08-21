@@ -16,6 +16,7 @@ class HashTypes implements ArrayInterface
                 'label' => $value,
             ];
         }
+
         return $ret;
     }
 

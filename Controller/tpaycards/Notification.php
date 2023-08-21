@@ -2,6 +2,7 @@
 
 namespace tpaycom\magento2cards\Controller\tpaycards;
 
+use Exception;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\CsrfAwareActionInterface;
@@ -20,49 +21,30 @@ use tpayLibs\src\_class_tpay\Utilities\Util;
 
 class Notification extends Action implements CsrfAwareActionInterface
 {
-    /**
-     * @var TpayCardsInterface
-     */
+    /** @var TpayCardsInterface */
     protected $tpay;
 
-    /**
-     * @var RemoteAddress
-     */
+    /** @var RemoteAddress */
     protected $remoteAddress;
 
-    /**
-     * @var bool
-     */
+    /** @var bool */
     protected $emailNotify = false;
 
-    /**
-     * @var CardTransactionModelFactory
-     */
+    /** @var CardTransactionModelFactory */
     protected $cardTransactionFactory;
 
-    /**
-     * @var TpayService
-     */
+    /** @var TpayService */
     protected $tpayService;
 
-    /**
-     * @var Registry
-     */
+    /** @var Registry */
     private $registry;
 
-    /**
-     * @var ModelContext
-     */
+    /** @var ModelContext */
     private $modelContext;
 
-    /**
-     * @var CardTransactionModel
-     */
+    /** @var CardTransactionModel */
     private $cardTransactionModel;
 
-    /**
-     * {@inheritdoc}
-     */
     public function __construct(
         Context $context,
         RemoteAddress $remoteAddress,
@@ -92,9 +74,7 @@ class Notification extends Action implements CsrfAwareActionInterface
         parent::__construct($context);
     }
 
-    /**
-     * @return bool
-     */
+    /** @return bool */
     public function execute()
     {
         try {
@@ -107,7 +87,7 @@ class Notification extends Action implements CsrfAwareActionInterface
             return $this
                 ->getResponse()
                 ->setStatusCode(Http::STATUS_CODE_200);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return false;
         }
     }
@@ -118,10 +98,7 @@ class Notification extends Action implements CsrfAwareActionInterface
      *
      * @return null|InvalidRequestException
      */
-    public function createCsrfValidationException(RequestInterface $request)
-    {
-        return null;
-    }
+    public function createCsrfValidationException(RequestInterface $request) {}
 
     /**
      * Perform custom request validation.
@@ -156,8 +133,6 @@ class Notification extends Action implements CsrfAwareActionInterface
      * @param array<string> $validParams
      *
      * @throws \tpayLibs\src\_class_tpay\Utilities\TException
-     *
-     * @return void
      */
     private function processSaleNotification($validParams)
     {
@@ -165,7 +140,7 @@ class Notification extends Action implements CsrfAwareActionInterface
         $localOrderDetails = $this->tpay->getTpayFormData($orderId);
         $this->cardTransactionModel
             ->setCurrency($localOrderDetails['currency'])
-            ->setAmount((float)$localOrderDetails['amount'])
+            ->setAmount((float) $localOrderDetails['amount'])
             ->setOrderID($orderId);
         if (isset($validParams['cli_auth'])) {
             $this->cardTransactionModel->setClientToken($validParams['cli_auth']);

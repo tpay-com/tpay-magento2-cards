@@ -11,24 +11,16 @@ use tpaycom\magento2cards\Service\TpayTokensService;
 
 class TpayCardsConfigProvider implements ConfigProviderInterface
 {
-    /**
-     * @var Repository
-     */
+    /** @var Repository */
     protected $assetRepository;
 
-    /**
-     * @var PaymentHelper
-     */
+    /** @var PaymentHelper */
     protected $paymentHelper;
 
-    /**
-     * @var TpayCardsInterface
-     */
+    /** @var TpayCardsInterface */
     protected $paymentMethod;
 
-    /**
-     * @var TpayTokensService
-     */
+    /** @var TpayTokensService */
     protected $tokensService;
 
     public function __construct(
@@ -41,9 +33,6 @@ class TpayCardsConfigProvider implements ConfigProviderInterface
         $this->tokensService = $tokensService;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getConfig()
     {
         $tpay = $this->getPaymentMethodInstance();
@@ -75,18 +64,6 @@ class TpayCardsConfigProvider implements ConfigProviderInterface
         ];
 
         return $tpay->isAvailable() ? $config : [];
-    }
-
-    /**
-     * @return MethodInterface|TpayCardsInterface
-     */
-    protected function getPaymentMethodInstance()
-    {
-        if (null === $this->paymentMethod) {
-            $this->paymentMethod = $this->paymentHelper->getMethodInstance(TpayCardsInterface::CODE);
-        }
-
-        return $this->paymentMethod;
     }
 
     /**
@@ -139,5 +116,15 @@ class TpayCardsConfigProvider implements ConfigProviderInterface
     public function createCSS($css)
     {
         return "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$this->generateURL($css)}\">";
+    }
+
+    /** @return MethodInterface|TpayCardsInterface */
+    protected function getPaymentMethodInstance()
+    {
+        if (null === $this->paymentMethod) {
+            $this->paymentMethod = $this->paymentHelper->getMethodInstance(TpayCardsInterface::CODE);
+        }
+
+        return $this->paymentMethod;
     }
 }

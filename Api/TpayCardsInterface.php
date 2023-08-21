@@ -22,34 +22,22 @@ interface TpayCardsInterface
      */
     public function getTpayFormData($orderId = null);
 
-    /**
-     * @return string
-     */
+    /** @return string */
     public function getApiPassword();
 
-    /**
-     * @return string
-     */
+    /** @return string */
     public function getApiKey();
 
-    /**
-     * @return string
-     */
+    /** @return string */
     public function getVerificationCode();
 
-    /**
-     * @return string
-     */
+    /** @return string */
     public function getRSAKey();
 
-    /**
-     * @return string
-     */
+    /** @return string */
     public function getHashType();
 
-    /**
-     * @return string
-     */
+    /** @return string */
     public function getMidType();
 
     /**
@@ -67,27 +55,25 @@ interface TpayCardsInterface
     public function getInvoiceSendMail();
 
     /**
+     * @param mixed $orderId
+     *
      * @return string
      */
     public function getCustomerId($orderId);
 
     /**
+     * @param mixed $orderId
+     *
      * @return bool
      */
     public function isCustomerGuest($orderId);
 
-    /**
-     * @return bool
-     */
+    /** @return bool */
     public function isCustomerLoggedIn();
 
-    /**
-     * @return null|int
-     */
+    /** @return null|int */
     public function getCheckoutCustomerId();
 
-    /**
-     * @return bool
-     */
+    /** @return bool */
     public function getCardSaveEnabled();
 }

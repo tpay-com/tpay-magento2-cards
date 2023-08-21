@@ -41,6 +41,8 @@ class TpayTokensService extends Tokens
     }
 
     /**
+     * @param mixed $customerId
+     *
      * @return array<array<string>>
      */
     public function getCustomerTokens($customerId)

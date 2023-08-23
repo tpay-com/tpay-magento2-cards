@@ -111,6 +111,7 @@ class Notification extends Action implements CsrfAwareActionInterface
         return true;
     }
 
+    /** @param array $validParams */
     private function deregisterCard($validParams)
     {
         $this->cardTransactionModel

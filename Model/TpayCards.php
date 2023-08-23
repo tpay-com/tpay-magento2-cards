@@ -148,6 +148,11 @@ class TpayCards extends AbstractMethod implements TpayCardsInterface
         ];
     }
 
+    /**
+     * @param string $orderCurrency
+     *
+     * @return int
+     */
     public function getISOCurrencyCode($orderCurrency)
     {
         return $this->validateCardCurrency($orderCurrency);

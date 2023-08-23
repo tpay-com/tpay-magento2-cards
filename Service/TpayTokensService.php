@@ -19,6 +19,12 @@ class TpayTokensService extends Tokens
         parent::__construct($context, $registry, $resource, $resourceCollection, $data);
     }
 
+    /**
+     * @param string $customerId
+     * @param string $token
+     * @param string $shortCode
+     * @param string $vendor
+     */
     public function setCustomerToken($customerId, $token, $shortCode, $vendor)
     {
         $customerTokens = $this->getCustomerTokens($customerId);
@@ -50,6 +56,11 @@ class TpayTokensService extends Tokens
         return $this->getToken($customerId);
     }
 
+    /**
+     * @param string $token
+     *
+     * @return $this
+     */
     public function deleteCustomerToken($token)
     {
         return $this->deleteToken($token)->save();

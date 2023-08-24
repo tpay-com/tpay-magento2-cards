@@ -6,6 +6,7 @@ use Exception;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Model\Context as ModelContext;
 use Magento\Framework\Registry;
 use tpaycom\magento2cards\Api\TpayCardsInterface;
@@ -121,6 +122,12 @@ class CardPayment extends Action
         return $this->_redirect(static::ERROR_PATH);
     }
 
+    /**
+     * @param string $orderId
+     * @param string $cardId
+     *
+     * @return ResponseInterface
+     */
     private function processSavedCardPayment($orderId, $cardId)
     {
         $customerTokens = $this->tokensService->getCustomerTokens($this->tpay->getCustomerId($orderId));
@@ -177,7 +184,7 @@ class CardPayment extends Action
     /**
      * Redirect customer to tpay transaction panel and try to pay again
      *
-     * @param mixed $orderId
+     * @param string $orderId
      *
      * @return \Magento\Framework\App\ResponseInterface
      */
@@ -206,6 +213,11 @@ class CardPayment extends Action
         return $this->_redirect(static::ERROR_PATH);
     }
 
+    /**
+     * @param int    $orderId
+     * @param string $key
+     * @param mixed  $value
+     */
     private function addToPaymentData($orderId, $key, $value)
     {
         $payment = $this->tpayService->getPayment($orderId);
@@ -214,6 +226,12 @@ class CardPayment extends Action
         $payment->setData($paymentData)->save();
     }
 
+    /**
+     * @param string $orderId
+     * @param mixed  $additionalPaymentInformation
+     *
+     * @return ResponseInterface
+     */
     private function processNewCardPayment($orderId, $additionalPaymentInformation)
     {
         $saveCard = isset($additionalPaymentInformation['card_save']) && $this->tpay->getCardSaveEnabled()

@@ -73,6 +73,10 @@ class TpayService extends RegisterCaptureNotificationOperation
         return $order;
     }
 
+    /**
+     * @param string $orderId
+     * @param string $comment
+     */
     public function addCommentToHistory($orderId, $comment)
     {
         /** @var Order $order */
@@ -175,6 +179,7 @@ class TpayService extends RegisterCaptureNotificationOperation
     /**
      * Registers capture notification.
      *
+     * @param Payment      $payment
      * @param float|string $amount
      * @param array        $validParams
      * @param bool         $skipFraudDetection
@@ -187,7 +192,6 @@ class TpayService extends RegisterCaptureNotificationOperation
         $validParams,
         $skipFraudDetection = false
     ) {
-        // @var Payment $payment
         $payment->setTransactionId(
             $this->transactionManager->generateTransactionId(
                 $payment,

@@ -7,6 +7,11 @@ use tpaycom\magento2cards\Model\Api\Data\TokensInterface;
 
 class Tokens extends AbstractModel implements TokensInterface
 {
+    /**
+     * @param string $id
+     *
+     * @return $this
+     */
     public function setCustomerId($id)
     {
         $this->setData('cli_id', $id);
@@ -34,6 +39,11 @@ class Tokens extends AbstractModel implements TokensInterface
         return $results;
     }
 
+    /**
+     * @param string $token
+     *
+     * @return $this
+     */
     public function setToken($token)
     {
         $this->setData('cli_auth', $token);
@@ -41,6 +51,11 @@ class Tokens extends AbstractModel implements TokensInterface
         return $this;
     }
 
+    /**
+     * @param string $shortCode
+     *
+     * @return $this
+     */
     public function setShortCode($shortCode)
     {
         $this->setData('short_code', $shortCode);
@@ -48,6 +63,11 @@ class Tokens extends AbstractModel implements TokensInterface
         return $this;
     }
 
+    /**
+     * @param string $vendorName
+     *
+     * @return $this
+     */
     public function setVendor($vendorName)
     {
         $this->setData('vendor', $vendorName);
@@ -55,6 +75,7 @@ class Tokens extends AbstractModel implements TokensInterface
         return $this;
     }
 
+    /** @return $this */
     public function setCreationTime()
     {
         $this->setData('created_at', date('Y-m-d H:i:s'));
@@ -62,6 +83,11 @@ class Tokens extends AbstractModel implements TokensInterface
         return $this;
     }
 
+    /**
+     * @param string $requestToken
+     *
+     * @return $this
+     */
     public function deleteToken($requestToken)
     {
         $tokensCollection = $this->getResourceCollection();

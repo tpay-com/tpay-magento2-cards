@@ -35,7 +35,7 @@
                 </field>
                 <field id="verification_code" translate="label" type="text" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Verification code</label>
-                    <validate>validate-no-empty</validate>
+                    <validate>no-whitespace</validate>
                 </field>
                 <field id="hash_type" translate="label" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Hash type</label>
@@ -43,7 +43,7 @@
                 </field>
                 <field id="rsa_key" translate="label" type="text" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>RSA key</label>
-                    <validate>validate-no-empty</validate>
+                    <validate>no-whitespace</validate>
                 </field>
                 <field id="card_save_enabled" translate="label" type="select" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable credit card saving</label>
@@ -55,6 +55,7 @@
                 </field>
                 <field id="sort_order" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Sort order</label>
+                    <validate>validate-number</validate>
                 </field>
                 <field id="allowspecific" translate="label" type="allowspecific" sortOrder="11" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>All or allowed countries</label>
@@ -66,10 +67,12 @@
                 </field>
                 <field id="min_order_total" translate="label" type="text" sortOrder="13" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Minimal amount for method</label>
+                    <validate>validate-number</validate>
                 </field>
                 <field id="max_order_total" translate="label" type="text" sortOrder="14" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Maximal amount for method</label>
                     <comment>Leave empty for no limit</comment>
+                    <validate>validate-number</validate>
                 </field>
             </group>
         </section>
